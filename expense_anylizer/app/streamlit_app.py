@@ -20,6 +20,8 @@ from core.agg import (
 from core.config import get_settings
 from core.profiles import save_profile, load_profiles
 from core.service import TransactionService
+from core.validation import validate_transaction, validate_file_upload, validate_search_query, sanitize_input
+from auth_ui import require_auth, render_user_menu, render_change_password_modal, get_current_user_id
 
 DEFAULT_CATEGORIES = [
     "מזון ומכולת", "תחבורה", "אוכל ומסעדות", "שירותים",
@@ -54,101 +56,109 @@ settings = get_settings()
 
 CUSTOM_CSS = """
 <style>
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #1f77b4;
-        text-align: center;
-        margin-bottom: 2rem;
+    /* Override Bootstrap CSS from cookie manager */
+    .stApp, .stApp * {
+        box-sizing: border-box !important;
     }
-    .confidence-high { color: #28a745; font-weight: bold; }
-    .confidence-medium { color: #ffc107; font-weight: bold; }
-    .confidence-low { color: #dc3545; font-weight: bold; }
+
+    .main-header {
+        font-size: 2.5rem !important;
+        font-weight: bold !important;
+        color: #1f77b4 !important;
+        text-align: center !important;
+        margin-bottom: 2rem !important;
+    }
+    .confidence-high { color: #28a745 !important; font-weight: bold !important; }
+    .confidence-medium { color: #ffc107 !important; font-weight: bold !important; }
+    .confidence-low { color: #dc3545 !important; font-weight: bold !important; }
 
     /* Large prominent metrics */
     .big-metric {
-        font-size: 3rem;
-        font-weight: bold;
-        color: #1f77b4;
-        text-align: center;
-        margin: 1rem 0;
+        font-size: 3rem !important;
+        font-weight: bold !important;
+        color: #1f77b4 !important;
+        text-align: center !important;
+        margin: 1rem 0 !important;
     }
     .big-metric-label {
-        font-size: 1.2rem;
-        color: #666;
-        text-align: center;
-        margin-bottom: 0.5rem;
+        font-size: 1.2rem !important;
+        color: #666 !important;
+        text-align: center !important;
+        margin-bottom: 0.5rem !important;
     }
 
     /* Category badges */
     .category-badge {
-        display: inline-block;
-        padding: 0.3rem 0.8rem;
-        border-radius: 15px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        margin: 0.2rem;
+        display: inline-block !important;
+        padding: 0.3rem 0.8rem !important;
+        border-radius: 15px !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+        margin: 0.2rem !important;
     }
 
     /* Quick action buttons */
     .quick-action {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 1rem;
-        border-radius: 10px;
-        text-align: center;
-        cursor: pointer;
-        transition: transform 0.2s;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        padding: 1rem !important;
+        border-radius: 10px !important;
+        text-align: center !important;
+        cursor: pointer !important;
+        transition: transform 0.2s !important;
     }
     .quick-action:hover {
-        transform: translateY(-2px);
+        transform: translateY(-2px) !important;
     }
 
     /* Empty state styling */
     .empty-state {
-        text-align: center;
-        padding: 3rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 15px;
-        margin: 2rem 0;
+        text-align: center !important;
+        padding: 3rem !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        border-radius: 15px !important;
+        margin: 2rem 0 !important;
     }
     .empty-state h2 {
-        font-size: 2rem;
-        margin-bottom: 1rem;
+        font-size: 2rem !important;
+        margin-bottom: 1rem !important;
+        color: white !important;
     }
     .empty-state p {
-        font-size: 1.2rem;
-        opacity: 0.9;
+        font-size: 1.2rem !important;
+        opacity: 0.9 !important;
+        color: white !important;
     }
 
     /* Search bar styling */
     .search-container {
-        background: white;
-        padding: 1rem;
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        margin-bottom: 2rem;
+        background: white !important;
+        padding: 1rem !important;
+        border-radius: 10px !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+        margin-bottom: 2rem !important;
     }
 
     /* Keyboard shortcuts help */
     .shortcuts-help {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: rgba(0,0,0,0.8);
-        color: white;
-        padding: 1rem;
-        border-radius: 10px;
-        font-size: 0.85rem;
-        z-index: 1000;
+        position: fixed !important;
+        bottom: 20px !important;
+        right: 20px !important;
+        background: rgba(0,0,0,0.8) !important;
+        color: white !important;
+        padding: 1rem !important;
+        border-radius: 10px !important;
+        font-size: 0.85rem !important;
+        z-index: 1000 !important;
     }
     .shortcut-key {
-        background: #555;
-        padding: 0.2rem 0.5rem;
-        border-radius: 3px;
-        font-family: monospace;
-        margin: 0 0.2rem;
+        background: #555 !important;
+        padding: 0.2rem 0.5rem !important;
+        border-radius: 3px !important;
+        font-family: monospace !important;
+        margin: 0 0.2rem !important;
+        color: white !important;
     }
 </style>
 """
@@ -162,9 +172,15 @@ st.set_page_config(
 
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
-# Initialize service first
-if 'service' not in st.session_state:
-    st.session_state.service = TransactionService()
+# Require authentication before anything else
+require_auth()
+
+# Get current user ID
+current_user_id = get_current_user_id()
+
+# Initialize service with user_id after authentication
+if 'service' not in st.session_state or st.session_state.service.user_id != current_user_id:
+    st.session_state.service = TransactionService(user_id=current_user_id)
 
 # Load existing transactions from database on startup
 if 'transactions_df' not in st.session_state:
@@ -235,11 +251,12 @@ def load_uploaded_file(uploaded_file):
 
         # Detect if this is a credit card file (all amounts are expenses)
         # Check filename OR profile match for credit cards
+        profile_id = matched_profile.get('id', '') if isinstance(matched_profile, dict) else (matched_profile or '')
         is_credit_card = (
             'visa' in uploaded_file.name.lower() or
             'adi' in uploaded_file.name.lower() or
             'gil' in uploaded_file.name.lower() or
-            (matched_profile and 'visa' in matched_profile.lower())
+            'visa' in profile_id.lower()
         )
         df = detect_negative_amounts(df, all_expenses=is_credit_card)
 
@@ -302,7 +319,6 @@ def load_uploaded_file(uploaded_file):
         # Auto-categorize if enabled - mark for processing after rerun
         if st.session_state.get('auto_categorize', False):
             # Write flag file that persists across browser refreshes
-            import os
             flag_file = 'data/.pending_categorization'
             os.makedirs('data', exist_ok=True)
             with open(flag_file, 'w') as f:
@@ -380,6 +396,12 @@ def display_advanced_mapping():
 
 
 def render_sidebar():
+    # Render user menu first
+    render_user_menu()
+
+    # Render change password modal if requested
+    render_change_password_modal()
+
     st.header("💾 Database")
 
     # Show database status
@@ -416,6 +438,7 @@ def render_sidebar():
         'visa_adi_v1': 'Adi Visa',
         'visa_gil_v1': 'Gil Visa',
         'isracard_v1': 'Isracard',
+        'leumi_account_v1': 'Leumi',
         'generic_csv': 'Generic CSV'
     }
 
@@ -457,12 +480,18 @@ def render_sidebar():
                 st.caption(f"**Profile ID:** `{selected_profile_id}`")
 
     uploaded_file = st.file_uploader(
-        "Choose a CSV or XLSX file",
-        type=['csv', 'xlsx'],
+        "Choose a CSV or Excel file",
+        type=['csv', 'xlsx', 'xls'],
         help="Upload your bank or credit card export file"
     )
 
     if uploaded_file is not None:
+        # Validate file upload
+        is_valid, errors = validate_file_upload(uploaded_file.name, uploaded_file.size)
+        if not is_valid:
+            for error in errors:
+                st.error(f"❌ {error}")
+            return
         # Auto-categorize option
         auto_categorize = st.checkbox(
             "🤖 Auto-categorize after upload",
@@ -605,18 +634,34 @@ def render_add_transaction_modal():
 
         with col1:
             if st.button("💾 Save", type="primary"):
-                if description_input and amount_input != 0:
+                # Validate inputs
+                is_valid, errors = validate_transaction(
+                    date_input, 
+                    description_input, 
+                    amount_input, 
+                    category_input if category_input else None
+                )
+                
+                if not is_valid:
+                    for error in errors:
+                        st.error(f"❌ {error}")
+                else:
+                    # Sanitize inputs
+                    sanitized_description = sanitize_input(description_input)
+                    sanitized_category = sanitize_input(category_input) if category_input else None
+                    
                     # Create transaction
                     new_transaction = pd.DataFrame([{
                         'Date': date_input,
-                        'Description': description_input,
+                        'Description': sanitized_description,
                         'Amount': -abs(amount_input) if amount_input > 0 else amount_input,
-                        'Category': category_input if category_input else None,
+                        'Category': sanitized_category,
                         'Month': date_input.strftime('%Y-%m')
                     }])
 
-                    # Save to database
-                    result = st.session_state.service.db.save_transactions(new_transaction)
+                    # Save to database with explicit user_id
+                    current_user_id = get_current_user_id()
+                    result = st.session_state.service.db.save_transactions(new_transaction, user_id=current_user_id)
 
                     if result['inserted'] > 0:
                         st.success("✅ Transaction added successfully!")
@@ -628,8 +673,6 @@ def render_add_transaction_modal():
                         st.rerun()
                     else:
                         st.error("❌ Failed to add transaction")
-                else:
-                    st.warning("⚠️ Please fill in Description and Amount")
 
         with col2:
             if st.button("❌ Cancel"):
@@ -715,26 +758,35 @@ def render_global_search():
     st.markdown('</div>', unsafe_allow_html=True)
 
     if search_query:
-        # Apply search filter
-        df = st.session_state.transactions_df
-        mask = (
-            df['Description'].str.contains(search_query, case=False, na=False) |
-            df['Category'].str.contains(search_query, case=False, na=False)
-        )
-
-        # Try to search by amount
-        try:
-            amount = float(search_query.replace('₪', '').replace(',', ''))
-            mask = mask | (df['Amount'].abs() == abs(amount))
-        except:
-            pass
-
-        st.session_state.filtered_df = df[mask]
-
-        if mask.sum() > 0:
-            st.info(f"🔍 Found {mask.sum()} transactions matching '{search_query}'")
+        # Validate search query
+        is_valid, errors = validate_search_query(search_query)
+        if not is_valid:
+            for error in errors:
+                st.error(f"❌ {error}")
         else:
-            st.warning(f"No transactions found matching '{search_query}'")
+            # Sanitize search query
+            sanitized_query = sanitize_input(search_query, max_length=200)
+            
+            # Apply search filter
+            df = st.session_state.transactions_df
+            mask = (
+                df['Description'].str.contains(sanitized_query, case=False, na=False) |
+                df['Category'].str.contains(sanitized_query, case=False, na=False)
+            )
+
+            # Try to search by amount
+            try:
+                amount = float(sanitized_query.replace('₪', '').replace(',', ''))
+                mask = mask | (df['Amount'].abs() == abs(amount))
+            except:
+                pass
+
+            st.session_state.filtered_df = df[mask]
+
+            if mask.sum() > 0:
+                st.info(f"🔍 Found {mask.sum()} transactions matching '{sanitized_query}'")
+            else:
+                st.warning(f"No transactions found matching '{sanitized_query}'")
 
 
 def display_actions():
@@ -854,24 +906,24 @@ def display_duplicates():
                         'Month': pd.to_datetime(date).strftime('%Y-%m')
                     }])
 
-                    # Force insert by directly using database (bypassing duplicate check)
+                    # Use the secure force insert method
                     try:
-                        with st.session_state.service.db._init_db.__self__ as conn:
-                            restore_df_save = restore_df.copy()
-                            restore_df_save.columns = ['date', 'description', 'amount', 'category', 'account', 'month']
-                            restore_df_save.to_sql('transactions', conn, if_exists='append', index=False)
+                        inserted_count = st.session_state.service.force_insert_transaction(restore_df)
+                        
+                        if inserted_count > 0:
+                            st.success(f"✅ Transaction added to database!")
 
-                        st.success(f"✅ Transaction added to database!")
+                            # Remove from skipped duplicates
+                            st.session_state.skipped_duplicates.pop(idx)
 
-                        # Remove from skipped duplicates
-                        st.session_state.skipped_duplicates.pop(idx)
+                            # Reload data
+                            st.session_state.transactions_df = st.session_state.service.get_transactions()
+                            if 'filtered_df' in st.session_state:
+                                del st.session_state.filtered_df
 
-                        # Reload data
-                        st.session_state.transactions_df = st.session_state.service.get_transactions()
-                        if 'filtered_df' in st.session_state:
-                            del st.session_state.filtered_df
-
-                        st.rerun()
+                            st.rerun()
+                        else:
+                            st.error("❌ Failed to add transaction")
                     except Exception as e:
                         st.error(f"❌ Failed to add transaction: {str(e)}")
 
@@ -896,6 +948,8 @@ def display_duplicates():
         if st.button("➕ Add All to Database", use_container_width=True, type="primary"):
             # Add all duplicates to database
             added_count = 0
+            failed_count = 0
+            
             for dup in st.session_state.skipped_duplicates:
                 try:
                     restore_df = pd.DataFrame([{
@@ -907,17 +961,21 @@ def display_duplicates():
                         'Month': pd.to_datetime(dup.get('date')).strftime('%Y-%m')
                     }])
 
-                    # Direct database insert
-                    import sqlite3
-                    with sqlite3.connect(st.session_state.service.db.db_path) as conn:
-                        restore_df_save = restore_df.copy()
-                        restore_df_save.columns = ['date', 'description', 'amount', 'category', 'account', 'month']
-                        restore_df_save.to_sql('transactions', conn, if_exists='append', index=False)
-                    added_count += 1
+                    # Use the secure force insert method
+                    inserted = st.session_state.service.force_insert_transaction(restore_df)
+                    if inserted > 0:
+                        added_count += 1
+                    else:
+                        failed_count += 1
                 except Exception as e:
+                    failed_count += 1
                     st.warning(f"⚠️ Failed to add one transaction: {str(e)}")
 
-            st.success(f"✅ Added {added_count} transactions to database!")
+            if added_count > 0:
+                st.success(f"✅ Added {added_count} transactions to database!")
+            if failed_count > 0:
+                st.warning(f"⚠️ Failed to add {failed_count} transactions")
+                
             st.session_state.skipped_duplicates = []
 
             # Reload data
@@ -1501,28 +1559,14 @@ def display_vendor_management():
                 # Update button
                 if selected_category != current_category and selected_category != "__CREATE_NEW__":
                     if st.button("💾 Update All Transactions", key=f"update_vendor_{idx}_{vendor}", type="primary"):
-                        # Update all transactions with this vendor description
-                        updated_count = 0
-                        for t_idx, t_row in df[df['Description'] == vendor].iterrows():
-                            date_str = t_row['Date'].strftime('%Y-%m-%d') if hasattr(t_row['Date'], 'strftime') else str(t_row['Date'])
-                            success = st.session_state.service.apply_category(
-                                vendor,
-                                date_str,
-                                selected_category,
-                                learn=True
-                            )
-                            if success:
-                                updated_count += 1
+                        # Use the new bulk update method for better performance
+                        updated_count = st.session_state.service.bulk_apply_category(
+                            vendor,
+                            selected_category,
+                            learn=True
+                        )
 
                         if updated_count > 0:
-                            # Update mappings
-                            st.session_state.mappings, st.session_state.vendor_map = learn_from_user_feedback(
-                                vendor,
-                                selected_category,
-                                st.session_state.mappings,
-                                st.session_state.vendor_map
-                            )
-
                             # Reload data
                             st.session_state.transactions_df = st.session_state.service.get_transactions()
                             if 'filtered_df' in st.session_state:
@@ -1606,6 +1650,158 @@ def display_analytics():
         st.info("No categorized transactions found")
 
 
+def display_manage_uploads():
+    """Display upload session management interface."""
+    st.subheader("📁 Manage Upload History")
+    st.markdown("View and manage all your uploaded files. You can delete specific uploads if needed.")
+
+    # Get all upload sessions
+    sessions = st.session_state.service.get_upload_sessions()
+
+    if not sessions:
+        st.info("📋 No upload history found. Upload some files to see them here!")
+        return
+
+    # Summary metrics
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Uploads", len(sessions))
+    with col2:
+        total_transactions = sum(s['transactions_count'] or 0 for s in sessions)
+        st.metric("Total Transactions", total_transactions)
+    with col3:
+        # Get most recent upload date
+        recent_upload = max(sessions, key=lambda x: x['upload_date'])
+        st.metric("Latest Upload", recent_upload['upload_date'][:10])
+
+    st.divider()
+
+    # Display upload sessions
+    st.markdown("### 📂 Upload Sessions")
+
+    for idx, session in enumerate(sessions):
+        upload_id = session['id']
+        filename = session['filename']
+        upload_date = session['upload_date']
+        trans_count = session['transactions_count'] or 0
+        account = session['account'] or "Unknown"
+        file_size = session['file_size']
+
+        # Format file size
+        if file_size:
+            if file_size < 1024:
+                size_str = f"{file_size} B"
+            elif file_size < 1024 * 1024:
+                size_str = f"{file_size / 1024:.1f} KB"
+            else:
+                size_str = f"{file_size / (1024 * 1024):.1f} MB"
+        else:
+            size_str = "Unknown"
+
+        # Determine icon based on filename
+        if 'visa' in filename.lower() or 'credit' in filename.lower():
+            file_icon = "💳"
+        elif 'leumi' in filename.lower() or 'bank' in filename.lower():
+            file_icon = "🏦"
+        else:
+            file_icon = "📄"
+
+        with st.expander(
+            f"{file_icon} {filename} - {upload_date[:16]} ({trans_count} transactions)",
+            expanded=False
+        ):
+            col1, col2 = st.columns([2, 1])
+
+            with col1:
+                st.write(f"**Filename:** {filename}")
+                st.write(f"**Upload Date:** {upload_date}")
+                st.write(f"**Transactions:** {trans_count}")
+                st.write(f"**Account:** {account}")
+                st.write(f"**File Size:** {size_str}")
+                st.write(f"**Upload ID:** `{upload_id[:8]}...`")
+
+            with col2:
+                st.markdown("### Actions")
+
+                # Delete button with confirmation
+                if st.button(f"🗑️ Delete Upload", key=f"delete_upload_{idx}", type="secondary"):
+                    st.session_state[f'confirm_delete_{idx}'] = True
+
+                # Show confirmation if requested
+                if st.session_state.get(f'confirm_delete_{idx}', False):
+                    st.warning(f"⚠️ This will delete **{trans_count}** transactions from this upload!")
+
+                    col_yes, col_no = st.columns(2)
+
+                    with col_yes:
+                        if st.button("✅ Confirm", key=f"confirm_yes_{idx}", type="primary"):
+                            try:
+                                # Delete the upload session and its transactions
+                                deleted_count = st.session_state.service.delete_upload_session(upload_id)
+
+                                st.success(f"✅ Deleted {deleted_count} transactions from upload '{filename}'")
+
+                                # Reload data
+                                st.session_state.transactions_df = st.session_state.service.get_transactions()
+                                if 'filtered_df' in st.session_state:
+                                    del st.session_state.filtered_df
+
+                                # Clear confirmation flag
+                                del st.session_state[f'confirm_delete_{idx}']
+
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error deleting upload: {str(e)}")
+
+                    with col_no:
+                        if st.button("❌ Cancel", key=f"confirm_no_{idx}"):
+                            del st.session_state[f'confirm_delete_{idx}']
+                            st.rerun()
+
+    st.divider()
+
+    # Bulk actions section
+    st.markdown("### 🔧 Bulk Actions")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("**Clear All Uploads**")
+        st.caption("Delete all upload history and transactions (⚠️ Use with extreme caution!)")
+
+        if st.button("🗑️ Delete All Uploads", type="secondary"):
+            st.session_state.show_delete_all_confirm = True
+
+    with col2:
+        if st.session_state.get('show_delete_all_confirm', False):
+            st.warning("⚠️ **WARNING**: This will delete ALL your transaction data!")
+
+            col_yes, col_no = st.columns(2)
+
+            with col_yes:
+                if st.button("✅ Yes, Delete Everything", type="primary", key="delete_all_confirm"):
+                    try:
+                        # Delete all transactions for current user
+                        deleted = st.session_state.service.clear_all_data()
+
+                        st.success(f"✅ Deleted all data ({deleted} transactions)")
+
+                        # Reload empty data
+                        st.session_state.transactions_df = st.session_state.service.get_transactions()
+                        if 'filtered_df' in st.session_state:
+                            del st.session_state.filtered_df
+
+                        st.session_state.show_delete_all_confirm = False
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Error deleting data: {str(e)}")
+
+            with col_no:
+                if st.button("❌ Cancel", key="delete_all_cancel"):
+                    st.session_state.show_delete_all_confirm = False
+                    st.rerun()
+
+
 def display_exports():
     if st.session_state.transactions_df.empty:
         return
@@ -1649,12 +1845,193 @@ def display_exports():
         )
 
 
+def display_ai_insights():
+    """Display AI-powered financial insights and recommendations."""
+    st.header("🤖 AI Financial Insights")
+    
+    # Force refresh the service to ensure we have the latest methods
+    current_user_id = get_current_user_id()
+    st.session_state.service = TransactionService(user_id=current_user_id)
+    
+    if st.session_state.transactions_df.empty:
+        st.info("No transactions to analyze. Please upload some data first.")
+        return
+    
+    # Check if OpenAI API key is configured
+    settings = get_settings()
+    if not settings.openai_api_key:
+        st.warning("⚠️ OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.")
+        st.info("💡 You can get an API key from https://platform.openai.com/api-keys")
+        return
+    
+    # Hero section
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                color: white; padding: 2rem; border-radius: 15px; margin-bottom: 2rem;">
+        <h2 style="color: white; margin-bottom: 1rem;">🔮 AI Financial Analysis</h2>
+        <p style="font-size: 1.1rem; margin-bottom: 0;">
+            Get personalized money-saving recommendations based on your spending patterns across all accounts.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Show estimated cost
+    try:
+        estimated_cost = st.session_state.service.estimate_ai_analysis_cost()
+        st.info(f"💰 Estimated cost: ~${estimated_cost:.4f} USD per analysis")
+    except Exception as e:
+        st.warning(f"Could not estimate cost: {str(e)}")
+    
+    # Generate Analysis button
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("🔮 Generate Analysis for All Accounts", 
+                    use_container_width=True, 
+                    type="primary",
+                    help="This will analyze all your accounts and provide personalized recommendations"):
+            
+            # Check if we have cached results
+            if 'ai_insights' in st.session_state and st.session_state.ai_insights:
+                if st.button("🔄 Regenerate Analysis", use_container_width=True):
+                    _generate_and_display_insights()
+            else:
+                _generate_and_display_insights()
+    
+    # Display results if available
+    if 'ai_insights' in st.session_state and st.session_state.ai_insights:
+        _display_insights_results(st.session_state.ai_insights)
+
+
+def _generate_and_display_insights():
+    """Generate AI insights and cache them in session state."""
+    with st.spinner("🤖 Analyzing your spending patterns... This may take 30-60 seconds."):
+        try:
+            insights = st.session_state.service.generate_ai_analysis()
+            st.session_state.ai_insights = insights
+            st.success("✅ Analysis complete!")
+            st.rerun()
+        except Exception as e:
+            st.error(f"❌ Analysis failed: {str(e)}")
+            st.info("💡 Make sure your OpenAI API key is valid and you have sufficient credits.")
+
+
+def _display_insights_results(insights: dict):
+    """Display the AI insights results."""
+    metadata = insights.get('metadata', {})
+    
+    # Overall Summary
+    st.markdown("### 📊 Overall Summary")
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total Spending", f"₪{metadata.get('overall_spending', 0):,.0f}")
+    with col2:
+        st.metric("Total Income", f"₪{metadata.get('overall_income', 0):,.0f}")
+    with col3:
+        st.metric("Accounts Analyzed", metadata.get('total_accounts', 0))
+    with col4:
+        st.metric("Generated", metadata.get('generated_at', 'Unknown')[:10])
+    
+    # Overall summary text
+    if 'overall_summary' in insights:
+        st.markdown("#### 💡 Key Insights")
+        st.markdown(f"**{insights['overall_summary']}**")
+    
+    # Account selector
+    accounts = list(insights.get('account_analyses', {}).keys())
+    if accounts:
+        st.markdown("### 🏦 Account Analysis")
+        
+        # Create tabs for each account
+        if len(accounts) > 1:
+            account_tabs = st.tabs([f"💳 {acc}" for acc in accounts])
+            for i, account in enumerate(accounts):
+                with account_tabs[i]:
+                    _display_account_analysis(account, insights['account_analyses'][account])
+        else:
+            # Single account - display directly
+            account = accounts[0]
+            _display_account_analysis(account, insights['account_analyses'][account])
+    
+    # Comparative insights
+    if 'comparative_insights' in insights:
+        st.markdown("### 🔄 Cross-Account Insights")
+        comp_insights = insights['comparative_insights']
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if 'highest_spending_by_category' in comp_insights:
+                st.markdown("#### 📈 Highest Spending by Category")
+                for category, account in comp_insights['highest_spending_by_category'].items():
+                    st.write(f"• **{category}**: {account}")
+        
+        with col2:
+            if 'consolidation_opportunities' in comp_insights:
+                st.markdown("#### 🔗 Consolidation Opportunities")
+                for opportunity in comp_insights['consolidation_opportunities']:
+                    st.write(f"• {opportunity}")
+        
+        if 'household_recommendations' in comp_insights:
+            st.markdown("#### 🏠 Household Recommendations")
+            for rec in comp_insights['household_recommendations']:
+                st.write(f"• {rec}")
+
+
+def _display_account_analysis(account_name: str, analysis: dict):
+    """Display analysis for a specific account."""
+    st.markdown(f"#### 💳 {account_name}")
+    
+    # Spending assessment
+    if 'spending_assessment' in analysis:
+        st.markdown("**📊 Spending Assessment:**")
+        st.write(analysis['spending_assessment'])
+    
+    # Budget recommendations
+    if 'budget_recommendations' in analysis and analysis['budget_recommendations']:
+        st.markdown("**📋 Budget Recommendations:**")
+        budget_df = pd.DataFrame([
+            {"Category": cat, "Recommended Budget": budget}
+            for cat, budget in analysis['budget_recommendations'].items()
+        ])
+        st.dataframe(budget_df, use_container_width=True, hide_index=True)
+    
+    # Savings opportunities
+    if 'savings_opportunities' in analysis and analysis['savings_opportunities']:
+        st.markdown("**💡 Top Savings Opportunities:**")
+        for i, opportunity in enumerate(analysis['savings_opportunities'], 1):
+            # Color code by priority
+            if i <= 2:
+                color = "#28a745"  # Green for high priority
+            elif i <= 4:
+                color = "#ffc107"  # Yellow for medium priority
+            else:
+                color = "#dc3545"  # Red for lower priority
+            
+            st.markdown(f"""
+            <div style="background-color: {color}20; padding: 1rem; border-radius: 8px; 
+                        border-left: 4px solid {color}; margin: 0.5rem 0;">
+                <strong>{i}. {opportunity}</strong>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    # Unusual alerts
+    if 'unusual_alerts' in analysis and analysis['unusual_alerts']:
+        st.markdown("**⚠️ Unusual Spending Alerts:**")
+        for alert in analysis['unusual_alerts']:
+            st.warning(f"⚠️ {alert}")
+    
+    # Monthly insights
+    if 'monthly_insights' in analysis:
+        st.markdown("**📅 Monthly Insights:**")
+        st.write(analysis['monthly_insights'])
+
+
 if __name__ == "__main__":
     main()
 
     # Main content tabs
     if not st.session_state.transactions_df.empty:
-        tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11 = st.tabs([
             "📊 Overview",
             "📈 Detailed Analysis",
             "📋 All Transactions",
@@ -1662,8 +2039,10 @@ if __name__ == "__main__":
             "📉 Spending Trends",
             "🤖 Auto-Categorize",
             "🏪 Manage Vendors",
+            "📁 Manage Uploads",
             "🔄 Review Duplicates",
-            "📤 Export Data"
+            "📤 Export Data",
+            "🤖 AI Insights"
         ])
 
         with tab1:
@@ -1688,7 +2067,13 @@ if __name__ == "__main__":
             display_vendor_management()
 
         with tab8:
-            display_duplicates()
+            display_manage_uploads()
 
         with tab9:
+            display_duplicates()
+
+        with tab10:
             display_exports()
+
+        with tab11:
+            display_ai_insights()

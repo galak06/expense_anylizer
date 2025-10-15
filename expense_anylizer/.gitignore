@@ -56,3 +56,7 @@ package-lock.json
 # OS
 .DS_Store
 Thumbs.db
+
+# SSL certificates (private key must be kept secure)
+ssl/private.key
+ssl/*.key

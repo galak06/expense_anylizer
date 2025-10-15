@@ -18,8 +18,9 @@ from .agg import monthly_summary, category_summary, top5_by_category
 class TransactionService:
     """Service layer for transaction operations."""
 
-    def __init__(self, db: Optional[TransactionDB] = None):
-        self.db = db or TransactionDB()
+    def __init__(self, db: Optional[TransactionDB] = None, user_id: Optional[int] = None):
+        self.user_id = user_id
+        self.db = db or TransactionDB(user_id=user_id)
         self.mappings = load_mapping()
 
     def import_from_file(self, file_path: str, all_expenses: bool = False, account: Optional[str] = None) -> Dict[str, Any]:
@@ -32,31 +33,52 @@ class TransactionService:
             account: Account name/identifier to tag these transactions with
 
         Returns:
-            Dict with import results including duplicate detection
+            Dict with import results including duplicate detection and upload session info
         """
-        # Load and process
-        df = load_from_file(file_path)
-        df = normalize_df(df)
-        df = detect_negative_amounts(df, all_expenses=all_expenses)
+        import os
 
-        # Add account column if provided
-        if account:
-            df['Account'] = account
+        # Create upload session
+        filename = os.path.basename(file_path)
+        file_size = os.path.getsize(file_path) if os.path.exists(file_path) else None
+        upload_id = self.create_upload_session(filename, file_size, account)
 
-        # Save to database with duplicate detection
-        save_result = self.db.save_transactions(df)
+        try:
+            # Load and process
+            df = load_from_file(file_path)
+            df = normalize_df(df)
+            df = detect_negative_amounts(df, all_expenses=all_expenses)
 
-        return {
-            'success': True,
-            'total_rows': save_result['total'],
-            'inserted': save_result['inserted'],
-            'duplicates': save_result['duplicates'],
-            'invalid_dates': save_result['invalid_dates'],
-            'date_range': {
-                'start': df['Date'].min().strftime('%Y-%m-%d') if not df.empty else None,
-                'end': df['Date'].max().strftime('%Y-%m-%d') if not df.empty else None
+            # Add account column if provided
+            if account:
+                df['Account'] = account
+
+            # Save to database with duplicate detection and upload tracking
+            save_result = self.db.save_transactions(df, upload_id=upload_id)
+
+            # Update upload session with final count
+            self.update_upload_session(upload_id, save_result['inserted'])
+
+            return {
+                'success': True,
+                'upload_id': upload_id,
+                'filename': filename,
+                'total_rows': save_result['total'],
+                'inserted': save_result['inserted'],
+                'duplicates': save_result['duplicates'],
+                'invalid_dates': save_result['invalid_dates'],
+                'skipped_rows': save_result.get('skipped_rows', []),  # Include skipped rows for review
+                'date_range': {
+                    'start': df['Date'].min().strftime('%Y-%m-%d') if not df.empty else None,
+                    'end': df['Date'].max().strftime('%Y-%m-%d') if not df.empty else None
+                }
             }
-        }
+        except Exception as e:
+            # If import fails, clean up the upload session
+            try:
+                self.delete_upload_session(upload_id)
+            except:
+                pass  # Don't fail on cleanup
+            raise e
 
     def get_transactions(
         self,
@@ -192,6 +214,40 @@ class TransactionService:
 
         return updated > 0
 
+    def bulk_apply_category(
+        self,
+        description: str,
+        category: str,
+        learn: bool = True
+    ) -> int:
+        """
+        Apply category to all transactions matching description.
+
+        Args:
+            description: Transaction description to match
+            category: Category to apply
+            learn: Whether to learn from this feedback
+
+        Returns:
+            Number of transactions updated
+        """
+        # Update in database
+        updated = self.db.bulk_update_category(description, category)
+
+        if updated > 0 and learn:
+            # Learn from feedback
+            df = self.db.load_transactions()
+            vendor_map = build_vendor_map(df)
+
+            self.mappings, vendor_map = learn_from_user_feedback(
+                description,
+                category,
+                self.mappings,
+                vendor_map
+            )
+
+        return updated
+
     def bulk_categorize(
         self,
         categories: List[str],
@@ -314,13 +370,114 @@ class TransactionService:
         """
         return self.db.export_to_csv(output_path)
 
-    def clear_all_data(self):
-        """Clear all transactions from database. Use with caution!"""
-        self.db.clear_all_transactions()
+    def force_insert_transaction(self, df: pd.DataFrame) -> int:
+        """
+        Force insert transactions bypassing duplicate check.
+        Use with caution - this should only be used for restoring duplicates.
+        
+        Args:
+            df: DataFrame with transactions to insert
+            
+        Returns:
+            Number of rows inserted
+        """
+        return self.db.force_insert_transaction(df)
+
+    def clear_all_data(self) -> int:
+        """
+        Clear all transactions from database. Use with caution!
+
+        Returns:
+            Number of transactions deleted
+        """
+        return self.db.clear_all_transactions()
+
+    def delete_by_account(self, account: str) -> int:
+        """
+        Delete all transactions for a specific account.
+        
+        Args:
+            account: Account name to delete transactions for
+            
+        Returns:
+            Number of transactions deleted
+        """
+        return self.db.delete_transactions_by_account(account)
+
+    def create_upload_session(self, filename: str, file_size: int = None, account: str = None) -> str:
+        """
+        Create a new upload session.
+        
+        Args:
+            filename: Name of the uploaded file
+            file_size: Size of the file in bytes
+            account: Account name if known
+            
+        Returns:
+            Upload session ID
+        """
+        return self.db.create_upload_session(filename, file_size, account)
+
+    def update_upload_session(self, upload_id: str, transactions_count: int):
+        """
+        Update upload session with final transaction count.
+        
+        Args:
+            upload_id: Upload session ID
+            transactions_count: Number of transactions imported
+        """
+        self.db.update_upload_session(upload_id, transactions_count)
+
+    def get_upload_sessions(self) -> List[dict]:
+        """
+        Get all upload sessions for the current user.
+        
+        Returns:
+            List of upload session dictionaries
+        """
+        return self.db.get_upload_sessions()
+
+    def delete_upload_session(self, upload_id: str) -> int:
+        """
+        Delete all transactions from a specific upload session.
+        
+        Args:
+            upload_id: Upload session ID to delete
+            
+        Returns:
+            Number of transactions deleted
+        """
+        return self.db.delete_upload_session(upload_id)
 
     def get_available_categories(self) -> List[str]:
         """Get list of categories used in database."""
         return self.db.get_all_categories()
+
+    def generate_ai_analysis(self) -> dict:
+        """Generate AI insights per account for current user's transactions."""
+        df = self.get_transactions()
+        if df.empty:
+            raise ValueError("No transactions to analyze")
+        
+        # Get settings for API key
+        from core.config import get_settings
+        settings = get_settings()
+        if not settings.openai_api_key:
+            raise ValueError("OpenAI API key not configured")
+        
+        # Import and call the AI analysis function
+        from core.ai_analysis import generate_ai_insights
+        return generate_ai_insights(df, settings.openai_api_key)
+
+    def estimate_ai_analysis_cost(self) -> float:
+        """Estimate the cost of AI analysis in USD."""
+        df = self.get_transactions()
+        if df.empty:
+            return 0.0
+        
+        from core.ai_analysis import _prepare_analysis_data, estimate_analysis_cost
+        analysis_data = _prepare_analysis_data(df)
+        return estimate_analysis_cost(analysis_data)
 
     def get_available_accounts(self) -> List[str]:
         """Get list of accounts used in database."""

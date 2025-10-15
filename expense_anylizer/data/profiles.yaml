@@ -45,6 +45,24 @@ profiles:
       description: ["שם בית העסק", "תיאור", "פרטים"]
       amount: ["סכום חיוב", "סכום עסקה", "סכום"]
 
+  - id: leumi_account_v1
+    match:
+      filename_regex: "(?i)תנועות.*בחשבון|leumi.*account|לאומי"
+      header_contains: ["תאריך", "תיאור", "בחובה", "בזכות"]
+    columns:
+      date: ["תאריך", "תאריך ערך", "תאריך פעולה"]
+      description: ["תיאור", "פירוט", "פעולה"]
+      amount: ["סכום", "חובה", "זכות"]
+    amount_rules:
+      sign_logic: bank_account  # Separate debit/credit columns
+      debit_credit_columns: true
+    transforms:
+      strip_currency: ["₪", ","]
+      unicode_minus: true
+    format: html_table
+    header_row: 1
+    data_start_row: 2
+
   - id: generic_csv
     match:
       filename_regex: "(?i)generic|unknown"

@@ -27,6 +27,16 @@ class Settings(BaseSettings):
     # OpenAI settings
     openai_api_key: Optional[str] = None
     
+    # Logging settings
+    log_level: str = "INFO"
+    log_file: Optional[str] = None
+    
+    # Security settings
+    session_timeout_minutes: int = 60
+    
+    # File upload limits
+    max_file_size_mb: int = 10
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

@@ -1,0 +1,8 @@
+[server]
+# Enable cookie-based session management
+enableXsrfProtection = true
+maxUploadSize = 200
+
+[browser]
+# Collect usage stats
+gatherUsageStats = false
