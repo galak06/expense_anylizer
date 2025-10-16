@@ -434,7 +434,7 @@ docker-compose logs --since 10m expense-analyzer
 docker exec expense-analyzer tar czf - /app/data | cat > backup-$(date +%Y%m%d).tar.gz
 
 # Or use volume backup
-docker run --rm -v expense_anylizer_data:/data -v $(pwd):/backup ubuntu tar czf /backup/data-backup.tar.gz /data
+docker run --rm -v expense_analyzer_data:/data -v $(pwd):/backup ubuntu tar czf /backup/data-backup.tar.gz /data
 ```
 
 ### Restore Data
@@ -443,7 +443,7 @@ docker run --rm -v expense_anylizer_data:/data -v $(pwd):/backup ubuntu tar czf 
 cat backup-20251012.tar.gz | docker exec -i expense-analyzer tar xzf - -C /
 
 # Or restore volume
-docker run --rm -v expense_anylizer_data:/data -v $(pwd):/backup ubuntu tar xzf /backup/data-backup.tar.gz -C /
+docker run --rm -v expense_analyzer_data:/data -v $(pwd):/backup ubuntu tar xzf /backup/data-backup.tar.gz -C /
 ```
 
 ---

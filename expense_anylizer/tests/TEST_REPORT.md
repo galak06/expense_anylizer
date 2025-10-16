@@ -257,7 +257,7 @@ The system is working correctly. All tests pass, and the cumulative total calcul
 ## Test Execution Details
 
 - **Test Script:** `tests/test_file_import.py`
-- **Test Directory:** `/Users/gil.c/Projects/Personal/whatsupcallback/expense_anylizer/tests/temp inputs`
-- **Database Path:** `/Users/gil.c/Projects/Personal/whatsupcallback/expense_anylizer/data/transactions.db`
+- **Test Directory:** `/Users/gil.c/Projects/Personal/whatsupcallback/expense_analyzer/tests/temp inputs`
+- **Database Path:** `/Users/gil.c/Projects/Personal/whatsupcallback/expense_analyzer/data/transactions.db`
 - **Execution Time:** ~5 seconds
 - **Test Result:** ✅ ALL TESTS PASSED

@@ -133,7 +133,7 @@ If you had transactions before adding authentication:
 ## 📁 File Structure
 
 ```
-expense_anylizer/
+expense_analyzer/
 ├── core/
 │   ├── auth.py              # Authentication logic
 │   ├── database.py          # Database with user isolation

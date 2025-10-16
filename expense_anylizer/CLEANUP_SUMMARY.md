@@ -214,12 +214,12 @@ These service functions exist but aren't exposed in UI:
 
 ## Files Modified
 
-1. `/Users/gil.c/Projects/Personal/whatsupcallback/expense_anylizer/core/agg.py`
+1. `/Users/gil.c/Projects/Personal/whatsupcallback/expense_analyzer/core/agg.py`
    - Removed `uncategorized_summary()` function
    - Removed `export_summary_stats()` function
    - Removed `UNCATEGORIZED_COLUMNS` constant
 
-2. `/Users/gil.c/Projects/Personal/whatsupcallback/expense_anylizer/app/streamlit_app.py`
+2. `/Users/gil.c/Projects/Personal/whatsupcallback/expense_analyzer/app/streamlit_app.py`
    - Moved `read_any` import to top level (line 10)
    - Removed inline import from `load_uploaded_file()` function
 

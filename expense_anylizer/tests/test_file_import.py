@@ -166,7 +166,7 @@ def main():
     print("COMPREHENSIVE FILE IMPORT TEST SUITE")
     print("="*80)
 
-    test_dir = "/Users/gil.c/Projects/Personal/whatsupcallback/expense_anylizer/tests/temp inputs"
+    test_dir = "/Users/gil.c/Projects/Personal/whatsupcallback/expense_analyzer/tests/temp inputs"
 
     test_files = [
         ("adi_10.xlsx", "visa_adi_v1"),

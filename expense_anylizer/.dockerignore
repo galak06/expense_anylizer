@@ -1,87 +1,68 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+README.md
+
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-*.egg-info/
-dist/
-build/
-
-# Virtual environments
-venv/
 env/
+venv/
 ENV/
-.venv
+env.bak/
+venv.bak/
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
+
+# OS
 .DS_Store
+Thumbs.db
 
-# Git
-.git/
-.gitignore
-.gitattributes
+# Logs
+*.log
+logs/
 
-# Documentation (keep essential docs)
-docs/
-
-# Tests (optional - remove if you want to run tests in container)
+# Test files
 tests/
-*.test
-*.spec
+test_*.py
+*_test.py
 
-# Data files (will be mounted as volume)
-data/*.csv
-data/*.db
-data/*.db-*
-data/*.xlsx
-temp_*
+# Temporary files
+temp/
+tmp/
+*.tmp
 
 # Environment files
 .env
 .env.local
 .env.*.local
 
-# Node modules
-node_modules/
-npm-debug.log
-yarn-error.log
-package-lock.json
+# SSL certificates (if any)
+ssl/
+*.crt
+*.key
+*.pem
 
-# Jupyter
-.ipynb_checkpoints
-*.ipynb
-
-# Coverage and test reports
-.coverage
-htmlcov/
-.pytest_cache/
-
-# Logs
-*.log
-logs/
-
-# OS
-Thumbs.db
-
-# Docker files
-Dockerfile
-docker-compose.yml
+# Docker
+Dockerfile*
+docker-compose*.yml
 .dockerignore
 
-# CI/CD
-.github/
-.gitlab-ci.yml
-.travis.yml
+# Deployment
+deploy/
+render.yaml
 
-# Misc
-README.md
-LICENSE
-CHANGELOG.md
-CODE_ANALYSIS.md
-CLEANUP_SUMMARY.md
+# Backup files
+*.backup
+*.bak

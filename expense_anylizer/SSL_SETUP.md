@@ -492,7 +492,7 @@ EOF
 ### Created Files
 
 ```
-expense_anylizer/
+expense_analyzer/
 ├── ssl/
 │   ├── certificate.crt      # Public certificate
 │   └── private.key          # Private key (KEEP SECURE!)
