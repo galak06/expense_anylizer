@@ -2432,8 +2432,15 @@ def display_unified_home():
 
 def display_unified_analytics():
     """Unified Analytics tab combining detailed analysis and spending trends."""
+    # Check if we have data to display
+    df = st.session_state.get('filtered_df', st.session_state.transactions_df)
+    
+    if df.empty:
+        st.info("📊 No data available. Upload transactions to see analytics.")
+        return
+    
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("📊 Detailed Analytics")
+    # Remove duplicate header - display_analytics() already has its own header
     display_analytics()
     st.markdown('</div>', unsafe_allow_html=True)
     
@@ -2445,15 +2452,25 @@ def display_unified_analytics():
 
 def display_unified_transactions():
     """Unified Transactions tab with inline categorization suggestions."""
+    # Check if we have data to display
+    df = st.session_state.get('filtered_df', st.session_state.transactions_df)
+    
+    if df.empty:
+        st.info("📋 No transactions to display. Upload a file to get started.")
+        return
+    
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.subheader("📋 All Transactions")
     display_transactions()
     st.markdown('</div>', unsafe_allow_html=True)
     
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("🤖 Auto-Categorize Suggestions")
-    display_suggestions()
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Only show suggestions if we have uncategorized transactions
+    uncategorized_count = len(df[df['Category'].isna() | (df['Category'] == '')])
+    if uncategorized_count > 0:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.subheader("🤖 Auto-Categorize Suggestions")
+        display_suggestions()
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
 def display_unified_manage():
