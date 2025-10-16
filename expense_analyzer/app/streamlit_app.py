@@ -1004,9 +1004,6 @@ def render_batch_categorize_modal():
 
 def render_keyboard_shortcuts():
     """Render keyboard shortcuts help."""
-    if not st.session_state.get('show_shortcuts', False):
-        return
-
     st.markdown("""
     <div class="shortcuts-help">
         <h4>⌨️ Keyboard Shortcuts</h4>
@@ -1333,7 +1330,8 @@ def main():
                 st.warning(f"⚠️ Auto-categorization failed: {str(e)}")
 
     # Render keyboard shortcuts help if enabled
-    render_keyboard_shortcuts()
+    if st.session_state.get('show_shortcuts', False):
+        render_keyboard_shortcuts()
 
     # Global search
     render_global_search()
