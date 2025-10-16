@@ -61,83 +61,243 @@ CUSTOM_CSS = """
         box-sizing: border-box !important;
     }
 
+    /* Global app styling for dark theme */
+    .stApp {
+        background-color: #0a0a0a !important;
+        color: #ffffff !important;
+    }
+
+    .main .block-container {
+        background-color: transparent !important;
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+        color: #ffffff !important;
+    }
+
+    /* Dark theme for all text elements */
+    .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6 {
+        color: #ffffff !important;
+    }
+
+    .stApp p, .stApp div, .stApp span {
+        color: #ffffff !important;
+    }
+
+    /* Modern Tab Styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0 !important;
+        background: #1a1a1a !important;
+        border-radius: 12px !important;
+        padding: 4px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+        border: 1px solid #333333 !important;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        background: transparent !important;
+        border-radius: 8px !important;
+        padding: 12px 24px !important;
+        margin: 0 2px !important;
+        transition: all 0.3s ease !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+        min-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: #ffffff !important;
+    }
+
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    .stTabs [data-baseweb="tab"]:hover {
+        background: rgba(102, 126, 234, 0.2) !important;
+        transform: translateY(-1px) !important;
+        color: #ffffff !important;
+    }
+
+    /* Floating Action Button */
+    .fab {
+        position: fixed !important;
+        bottom: 20px !important;
+        right: 20px !important;
+        width: 56px !important;
+        height: 56px !important;
+        border-radius: 50% !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        border: none !important;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4) !important;
+        cursor: pointer !important;
+        z-index: 1000 !important;
+        transition: all 0.3s ease !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 24px !important;
+    }
+
+    .fab:hover {
+        transform: scale(1.1) !important;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6) !important;
+    }
+
+    /* Card-based layouts */
+    .card {
+        background: #1a1a1a !important;
+        border-radius: 12px !important;
+        padding: 1.5rem !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+        margin-bottom: 1rem !important;
+        transition: all 0.3s ease !important;
+        border: 1px solid #333333 !important;
+        color: #ffffff !important;
+    }
+
+    .card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
+        transform: translateY(-2px) !important;
+        border-color: #444444 !important;
+    }
+
+    /* Main header with modern styling */
     .main-header {
         font-size: 2.5rem !important;
-        font-weight: bold !important;
-        color: #1f77b4 !important;
+        font-weight: 700 !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
         text-align: center !important;
         margin-bottom: 2rem !important;
+        letter-spacing: -0.02em !important;
     }
-    .confidence-high { color: #28a745 !important; font-weight: bold !important; }
-    .confidence-medium { color: #ffc107 !important; font-weight: bold !important; }
-    .confidence-low { color: #dc3545 !important; font-weight: bold !important; }
 
-    /* Large prominent metrics */
+    /* Enhanced metrics */
     .big-metric {
         font-size: 3rem !important;
-        font-weight: bold !important;
-        color: #1f77b4 !important;
+        font-weight: 700 !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
         text-align: center !important;
         margin: 1rem 0 !important;
+        letter-spacing: -0.02em !important;
     }
     .big-metric-label {
         font-size: 1.2rem !important;
-        color: #666 !important;
+        color: #6b7280 !important;
         text-align: center !important;
         margin-bottom: 0.5rem !important;
+        font-weight: 500 !important;
     }
 
-    /* Category badges */
+    /* Enhanced category badges */
     .category-badge {
         display: inline-block !important;
-        padding: 0.3rem 0.8rem !important;
-        border-radius: 15px !important;
+        padding: 0.4rem 1rem !important;
+        border-radius: 20px !important;
         font-weight: 600 !important;
         font-size: 0.9rem !important;
         margin: 0.2rem !important;
+        transition: all 0.2s ease !important;
+    }
+    .category-badge:hover {
+        transform: scale(1.05) !important;
     }
 
-    /* Quick action buttons */
+    /* Quick action buttons with modern styling */
     .quick-action {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
         color: white !important;
-        padding: 1rem !important;
-        border-radius: 10px !important;
+        padding: 1rem 1.5rem !important;
+        border-radius: 12px !important;
         text-align: center !important;
         cursor: pointer !important;
-        transition: transform 0.2s !important;
+        transition: all 0.3s ease !important;
+        border: none !important;
+        font-weight: 600 !important;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
     }
     .quick-action:hover {
         transform: translateY(-2px) !important;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4) !important;
     }
 
-    /* Empty state styling */
+    /* Enhanced empty state */
     .empty-state {
         text-align: center !important;
-        padding: 3rem !important;
+        padding: 4rem 2rem !important;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
         color: white !important;
-        border-radius: 15px !important;
+        border-radius: 20px !important;
         margin: 2rem 0 !important;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3) !important;
     }
     .empty-state h2 {
-        font-size: 2rem !important;
+        font-size: 2.5rem !important;
         margin-bottom: 1rem !important;
         color: white !important;
+        font-weight: 700 !important;
     }
     .empty-state p {
         font-size: 1.2rem !important;
         opacity: 0.9 !important;
         color: white !important;
+        line-height: 1.6 !important;
     }
 
-    /* Search bar styling */
+    /* Enhanced search container */
     .search-container {
-        background: white !important;
-        padding: 1rem !important;
-        border-radius: 10px !important;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+        background: #1a1a1a !important;
+        padding: 1.5rem !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
         margin-bottom: 2rem !important;
+        border: 1px solid #333333 !important;
+        color: #ffffff !important;
+    }
+
+    /* Loading states */
+    .loading-skeleton {
+        background: linear-gradient(90deg, #333333 25%, #444444 50%, #333333 75%) !important;
+        background-size: 200% 100% !important;
+        animation: loading 1.5s infinite !important;
+        border-radius: 8px !important;
+        height: 20px !important;
+        margin: 0.5rem 0 !important;
+    }
+
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    /* Confidence indicators */
+    .confidence-high { 
+        color: #10b981 !important; 
+        font-weight: 600 !important; 
+        background: rgba(16, 185, 129, 0.1) !important;
+        padding: 0.2rem 0.5rem !important;
+        border-radius: 6px !important;
+    }
+    .confidence-medium { 
+        color: #f59e0b !important; 
+        font-weight: 600 !important; 
+        background: rgba(245, 158, 11, 0.1) !important;
+        padding: 0.2rem 0.5rem !important;
+        border-radius: 6px !important;
+    }
+    .confidence-low { 
+        color: #ef4444 !important; 
+        font-weight: 600 !important; 
+        background: rgba(239, 68, 68, 0.1) !important;
+        padding: 0.2rem 0.5rem !important;
+        border-radius: 6px !important;
     }
 
     /* Keyboard shortcuts help */
@@ -145,20 +305,134 @@ CUSTOM_CSS = """
         position: fixed !important;
         bottom: 20px !important;
         right: 20px !important;
-        background: rgba(0,0,0,0.8) !important;
+        background: rgba(0,0,0,0.9) !important;
         color: white !important;
-        padding: 1rem !important;
-        border-radius: 10px !important;
-        font-size: 0.85rem !important;
+        padding: 1.5rem !important;
+        border-radius: 12px !important;
+        font-size: 0.9rem !important;
         z-index: 1000 !important;
+        backdrop-filter: blur(10px) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
     }
     .shortcut-key {
-        background: #555 !important;
-        padding: 0.2rem 0.5rem !important;
-        border-radius: 3px !important;
-        font-family: monospace !important;
-        margin: 0 0.2rem !important;
+        background: rgba(255,255,255,0.2) !important;
+        padding: 0.3rem 0.6rem !important;
+        border-radius: 6px !important;
+        font-family: 'SF Mono', Monaco, monospace !important;
+        margin: 0 0.3rem !important;
         color: white !important;
+        font-weight: 600 !important;
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .stTabs [data-baseweb="tab"] {
+            padding: 8px 16px !important;
+            font-size: 13px !important;
+            min-height: 40px !important;
+        }
+        
+        .main-header {
+            font-size: 2rem !important;
+        }
+        
+        .big-metric {
+            font-size: 2.5rem !important;
+        }
+        
+        .fab {
+            width: 48px !important;
+            height: 48px !important;
+            bottom: 16px !important;
+            right: 16px !important;
+        }
+    }
+
+    /* Improved typography */
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: 600 !important;
+        letter-spacing: -0.01em !important;
+    }
+
+    /* Better spacing */
+    .stContainer {
+        padding: 1rem !important;
+    }
+
+    /* Sidebar styling for dark theme */
+    .css-1d391kg {
+        background-color: #1a1a1a !important;
+        border-right: 1px solid #333333 !important;
+        color: #ffffff !important;
+    }
+
+    /* Ensure consistent dark backgrounds for all containers */
+    .stSidebar {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+    }
+
+    /* Sidebar text styling */
+    .stSidebar h1, .stSidebar h2, .stSidebar h3, .stSidebar h4, .stSidebar h5, .stSidebar h6 {
+        color: #ffffff !important;
+    }
+
+    .stSidebar p, .stSidebar div, .stSidebar span {
+        color: #ffffff !important;
+    }
+
+    /* Enhanced buttons */
+    .stButton > button {
+        border-radius: 8px !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .stButton > button:hover {
+        transform: translateY(-1px) !important;
+    }
+
+    /* Dark theme for Streamlit components */
+    .stSelectbox > div > div {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+        border: 1px solid #333333 !important;
+    }
+
+    .stTextInput > div > div > input {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+        border: 1px solid #333333 !important;
+    }
+
+    .stTextArea > div > div > textarea {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+        border: 1px solid #333333 !important;
+    }
+
+    .stNumberInput > div > div > input {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+        border: 1px solid #333333 !important;
+    }
+
+    .stDateInput > div > div > input {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+        border: 1px solid #333333 !important;
+    }
+
+    /* Dark theme for expanders */
+    .streamlit-expanderHeader {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+        border: 1px solid #333333 !important;
+    }
+
+    .streamlit-expanderContent {
+        background-color: #0a0a0a !important;
+        color: #ffffff !important;
     }
 </style>
 """
@@ -746,6 +1020,45 @@ def render_keyboard_shortcuts():
     """, unsafe_allow_html=True)
 
 
+def render_floating_action_button():
+    """Render floating action button for quick actions."""
+    if st.session_state.transactions_df.empty:
+        return
+    
+    # Create FAB container
+    st.markdown("""
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+        <div class="fab" onclick="showFabMenu()">⚡</div>
+    </div>
+    
+    <script>
+    function showFabMenu() {
+        // This would show a menu of quick actions
+        // For now, we'll use Streamlit's built-in functionality
+        console.log('FAB clicked');
+    }
+    </script>
+    """, unsafe_allow_html=True)
+    
+    # Add FAB actions as invisible buttons that can be triggered
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col1:
+        if st.button("➕", key="fab_add", help="Add Transaction", use_container_width=True):
+            st.session_state.show_add_transaction = True
+            st.rerun()
+    
+    with col2:
+        if st.button("🤖", key="fab_categorize", help="Batch Categorize", use_container_width=True):
+            st.session_state.show_batch_categorize = True
+            st.rerun()
+    
+    with col3:
+        if st.button("🔍", key="fab_search", help="Quick Search", use_container_width=True):
+            st.session_state.show_quick_search = True
+            st.rerun()
+
+
 def render_global_search():
     """Render global search bar at the top."""
     st.markdown('<div class="search-container">', unsafe_allow_html=True)
@@ -1025,20 +1338,41 @@ def main():
     # Global search
     render_global_search()
 
+    # Floating Action Button (FAB)
+    render_floating_action_button()
+
     with st.sidebar:
         render_sidebar()
 
 
 def display_dashboard():
     if st.session_state.transactions_df.empty:
-        # Empty state with onboarding
+        # Enhanced empty state with onboarding
         st.markdown("""
         <div class="empty-state">
             <h2>👋 Welcome to Expense Analyzer!</h2>
-            <p>Get started by uploading your bank or credit card statement</p>
+            <p>Transform your financial data into actionable insights</p>
             <br>
-            <p>📁 Click "Upload & Process" in the sidebar →</p>
-            <p>Or use Quick Actions above to add manual transactions</p>
+            <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 2rem;">
+                <div style="text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
+                    <h3 style="color: white; margin-bottom: 0.5rem;">Upload Data</h3>
+                    <p style="opacity: 0.9;">Click "Upload & Process" in the sidebar</p>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">➕</div>
+                    <h3 style="color: white; margin-bottom: 0.5rem;">Add Manually</h3>
+                    <p style="opacity: 0.9;">Use Quick Actions to add transactions</p>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🤖</div>
+                    <h3 style="color: white; margin-bottom: 0.5rem;">AI Insights</h3>
+                    <p style="opacity: 0.9;">Get personalized recommendations</p>
+                </div>
+            </div>
+            <div style="margin-top: 2rem; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                <p style="margin: 0; font-size: 1.1rem;"><strong>💡 Pro Tip:</strong> Start by uploading your most recent bank or credit card statement to see the magic happen!</p>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         return
@@ -2026,54 +2360,157 @@ def _display_account_analysis(account_name: str, analysis: dict):
         st.write(analysis['monthly_insights'])
 
 
+def display_unified_home():
+    """Unified Home tab combining dashboard, quick stats, and recent activity."""
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    
+    # Main dashboard content
+    display_dashboard()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Quick actions section
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("⚡ Quick Actions")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        if st.button("➕ Add Transaction", use_container_width=True, type="primary"):
+            st.session_state.show_add_transaction = True
+    
+    with col2:
+        if st.button("🤖 Batch Categorize", use_container_width=True):
+            st.session_state.show_batch_categorize = True
+    
+    with col3:
+        if st.button("📊 Quick Stats", use_container_width=True):
+            st.session_state.show_quick_stats = True
+    
+    with col4:
+        if st.button("❓ Keyboard Shortcuts", use_container_width=True):
+            st.session_state.show_shortcuts = not st.session_state.get('show_shortcuts', False)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Render modals
+    render_add_transaction_modal()
+    render_batch_categorize_modal()
+    
+    # Quick stats
+    if st.session_state.get('show_quick_stats', False):
+        with st.expander("📊 Quick Statistics", expanded=True):
+            df = st.session_state.transactions_df
+
+            if not df.empty:
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.metric("Total Transactions", len(df))
+                    categorized = df['Category'].notna().sum()
+                    st.metric("Categorized", f"{categorized} ({(categorized/len(df)*100):.1f}%)")
+
+                with col2:
+                    total_expenses = df[df['Amount'] < 0]['Amount'].sum()
+                    st.metric("Total Expenses", f"₪{abs(total_expenses):,.2f}")
+                    total_income = df[df['Amount'] > 0]['Amount'].sum()
+                    st.metric("Total Income", f"₪{total_income:,.2f}")
+
+                with col3:
+                    net_amount = df['Amount'].sum()
+                    st.metric("Net Amount", f"₪{net_amount:,.2f}")
+                    if 'Date' in df.columns:
+                        date_range = f"{df['Date'].min().strftime('%Y-%m-%d')} to {df['Date'].max().strftime('%Y-%m-%d')}"
+                        st.caption(f"📅 {date_range}")
+
+                if st.button("Close", key="close_quick_stats"):
+                    st.session_state.show_quick_stats = False
+                    st.rerun()
+            else:
+                st.info("No data available")
+
+
+def display_unified_analytics():
+    """Unified Analytics tab combining detailed analysis and spending trends."""
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("📊 Detailed Analytics")
+    display_analytics()
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("📈 Spending Trends")
+    display_trends()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+def display_unified_transactions():
+    """Unified Transactions tab with inline categorization suggestions."""
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("📋 All Transactions")
+    display_transactions()
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("🤖 Auto-Categorize Suggestions")
+    display_suggestions()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+def display_unified_manage():
+    """Unified Manage tab combining all management functions."""
+    # Create sub-tabs for different management areas
+    manage_tab1, manage_tab2, manage_tab3, manage_tab4 = st.tabs([
+        "🏪 Vendors", 
+        "📁 Uploads", 
+        "🔄 Duplicates", 
+        "📤 Export"
+    ])
+    
+    with manage_tab1:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        display_vendor_management()
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with manage_tab2:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        display_manage_uploads()
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with manage_tab3:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        display_duplicates()
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with manage_tab4:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        display_exports()
+        st.markdown('</div>', unsafe_allow_html=True)
+
+
 if __name__ == "__main__":
     main()
 
-    # Main content tabs
+    # Main content tabs - Consolidated from 11 to 5 tabs
     if not st.session_state.transactions_df.empty:
-        tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11 = st.tabs([
-            "📊 Overview",
-            "📈 Detailed Analysis",
-            "📋 All Transactions",
-            "⚡ Quick Actions",
-            "📉 Spending Trends",
-            "🤖 Auto-Categorize",
-            "🏪 Manage Vendors",
-            "📁 Manage Uploads",
-            "🔄 Review Duplicates",
-            "📤 Export Data",
+        tab1, tab2, tab3, tab4, tab5 = st.tabs([
+            "🏠 Home",
+            "📊 Analytics", 
+            "📋 Transactions",
+            "⚙️ Manage",
             "🤖 AI Insights"
         ])
 
         with tab1:
-            display_dashboard()
+            display_unified_home()
 
         with tab2:
-            display_analytics()
+            display_unified_analytics()
 
         with tab3:
-            display_transactions()
+            display_unified_transactions()
 
         with tab4:
-            display_actions()
+            display_unified_manage()
 
         with tab5:
-            display_trends()
-
-        with tab6:
-            display_suggestions()
-
-        with tab7:
-            display_vendor_management()
-
-        with tab8:
-            display_manage_uploads()
-
-        with tab9:
-            display_duplicates()
-
-        with tab10:
-            display_exports()
-
-        with tab11:
             display_ai_insights()
