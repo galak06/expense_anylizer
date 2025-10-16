@@ -1038,22 +1038,24 @@ def render_floating_action_button():
     """, unsafe_allow_html=True)
     
     # Add FAB actions as invisible buttons that can be triggered
-    col1, col2, col3 = st.columns([1, 1, 1])
-    
-    with col1:
-        if st.button("➕", key="fab_add", help="Add Transaction", use_container_width=True):
-            st.session_state.show_add_transaction = True
-            st.rerun()
-    
-    with col2:
-        if st.button("🤖", key="fab_categorize", help="Batch Categorize", use_container_width=True):
-            st.session_state.show_batch_categorize = True
-            st.rerun()
-    
-    with col3:
-        if st.button("🔍", key="fab_search", help="Quick Search", use_container_width=True):
-            st.session_state.show_quick_search = True
-            st.rerun()
+    # Only render if we have transactions
+    if not st.session_state.transactions_df.empty:
+        col1, col2, col3 = st.columns([1, 1, 1])
+        
+        with col1:
+            if st.button("➕", key="fab_add", help="Add Transaction", use_container_width=True):
+                st.session_state.show_add_transaction = True
+                st.rerun()
+        
+        with col2:
+            if st.button("🤖", key="fab_categorize", help="Batch Categorize", use_container_width=True):
+                st.session_state.show_batch_categorize = True
+                st.rerun()
+        
+        with col3:
+            if st.button("🔍", key="fab_search", help="Quick Search", use_container_width=True):
+                st.session_state.show_quick_search = True
+                st.rerun()
 
 
 def render_global_search():
@@ -2529,3 +2531,6 @@ if __name__ == "__main__":
 
         with tab5:
             display_ai_insights()
+    else:
+        # Show empty state when no transactions
+        display_dashboard()
