@@ -1,3 +1,0 @@
-"""
-Curser application modules.
-"""
