@@ -1,3 +1,6 @@
+# Render.com Deployment Configuration for Curser Expense Analyzer
+# This file defines the deployment settings for the Streamlit application
+
 services:
   - type: web
     name: expense-analyzer
@@ -8,7 +11,10 @@ services:
     region: oregon
     buildCommand: ""
     startCommand: ""
+    
+    # Environment Variables
     envVars:
+      # === Streamlit Configuration ===
       - key: STREAMLIT_SERVER_PORT
         value: 8501
       - key: STREAMLIT_SERVER_ADDRESS
@@ -17,10 +23,30 @@ services:
         value: true
       - key: STREAMLIT_BROWSER_GATHER_USAGE_STATS
         value: false
+      - key: STREAMLIT_SERVER_ENABLE_CORS
+        value: false
+      - key: STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION
+        value: true
+      
+      # === Application Configuration ===
+      - key: PYTHONPATH
+        value: /app
+      - key: PYTHONUNBUFFERED
+        value: 1
+      
+      # === Database Configuration ===
       - key: DATABASE_PATH
-        value: data/transactions.db
-      - key: LOG_LEVEL
-        value: INFO
+        value: /app/data/transactions.db
+      
+      # === File I/O Settings ===
+      - key: ENCODINGS_LIST
+        value: '["utf-8", "cp1255", "iso-8859-8", "windows-1255"]'
+      - key: DELIMITERS_LIST
+        value: '[",", ";", "\t"]'
+      - key: DEFAULT_MAPPING_PATH
+        value: /app/data/mapping.csv
+      
+      # === Categorization Settings ===
       - key: FUZZY_MATCH_THRESHOLD
         value: "86"
       - key: KEYWORD_CONFIDENCE
@@ -31,13 +57,71 @@ services:
         value: "0.75"
       - key: MIN_WORD_LENGTH
         value: "3"
-      - key: ENCODINGS_LIST
-        value: '["utf-8", "cp1255", "iso-8859-8", "windows-1255"]'
-      - key: DELIMITERS_LIST
-        value: '[",", ";", "\t"]'
-      - key: DEFAULT_MAPPING_PATH
-        value: data/mapping.csv
+      
+      # === Security Settings ===
+      - key: SESSION_TIMEOUT_MINUTES
+        value: "60"
       - key: MAX_FILE_SIZE_MB
         value: "10"
+      
+      # === Logging Configuration ===
+      - key: LOG_LEVEL
+        value: INFO
+      - key: LOG_FILE
+        value: /app/logs/app.log
+      
+      # === OpenAI Configuration (Optional) ===
+      # Uncomment and set your OpenAI API key if using AI features
+      # - key: OPENAI_API_KEY
+      #   value: your-openai-api-key-here
+      
+      # === Authentication Settings ===
+      # These will be set up during initial deployment
+      # - key: SECRET_KEY
+      #   value: your-secret-key-here
+    
+    # Health Check Configuration
     healthCheckPath: /_stcore/health
+    
+    # Auto-deploy on git push
     autoDeploy: true
+    
+    # Optional: Persistent Disk for Data (Uncomment if needed)
+    # This ensures data persists across deployments
+    # disks:
+    #   - name: data-disk
+    #     mountPath: /app/data
+    #     sizeGB: 1
+    
+    # Optional: Custom Domain (Uncomment and configure)
+    # customDomains:
+    #   - your-domain.com
+    
+    # Optional: Environment-specific overrides
+    # Uncomment for production-specific settings
+    # envVars:
+    #   - key: LOG_LEVEL
+    #     value: WARNING
+    #   - key: SESSION_TIMEOUT_MINUTES
+    #     value: "30"
+
+# Optional: Background Services (if needed in the future)
+# services:
+#   - type: worker
+#     name: expense-analyzer-worker
+#     env: docker
+#     dockerfilePath: ./Dockerfile
+#     plan: starter
+#     envVars:
+#       - key: WORKER_MODE
+#         value: true
+
+# Optional: Database Service (if using external database)
+# services:
+#   - type: pserv
+#     name: expense-analyzer-db
+#     plan: starter
+#     env: postgresql
+#     envVars:
+#       - key: DATABASE_URL
+#         value: postgresql://user:pass@host:port/dbname
