@@ -32,9 +32,9 @@ services:
       - key: MIN_WORD_LENGTH
         value: "3"
       - key: ENCODINGS_LIST
-        value: "utf-8,cp1255,iso-8859-8,windows-1255"
+        value: '["utf-8", "cp1255", "iso-8859-8", "windows-1255"]'
       - key: DELIMITERS_LIST
-        value: ",,;,\t"
+        value: '[",", ";", "\t"]'
       - key: DEFAULT_MAPPING_PATH
         value: data/mapping.csv
       - key: MAX_FILE_SIZE_MB
