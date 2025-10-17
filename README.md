@@ -76,6 +76,17 @@ Built-in profiles for:
 
 See [Input Profiles Guide](docs/INPUT_PROFILES.md) for details on creating custom profiles.
 
+## 📚 Documentation
+
+All project documentation is organized in the [`docs/`](docs/) folder:
+
+- **[Quick Start Guide](docs/QUICKSTART.md)** - Get started quickly
+- **[Deployment Plan](docs/DEPLOYMENT_PLAN.md)** - Complete Render deployment guide
+- **[Authentication Setup](docs/AUTHENTICATION.md)** - User authentication system
+- **[Docker Setup](docs/DOCKER.md)** - Container deployment
+- **[Security Guide](docs/SECURITY_IMPLEMENTATION.md)** - Security features
+- **[Full Documentation Index](docs/README.md)** - Complete documentation overview
+
 ## Categorization Agent
 
 The system uses a three-tier approach:
