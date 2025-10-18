@@ -417,6 +417,65 @@ class PostgreSQLTransactionDB:
             log_error(logger, e, "get_transaction_count")
             return 0
 
+    def update_category(self, description: str, transaction_date: str, category: str) -> int:
+        """Update category for a specific transaction."""
+        user_id = self.get_user_id()
+        log_data_access(logger, "update_category", user_id, f"Updating category for: {description}")
+        
+        try:
+            with self.engine.connect() as conn:
+                result = conn.execute(text("""
+                    UPDATE transactions 
+                    SET category = :category, updated_at = CURRENT_TIMESTAMP
+                    WHERE user_id = :user_id AND description = :description AND date = :date
+                """), {
+                    'user_id': user_id,
+                    'description': description,
+                    'date': transaction_date,
+                    'category': category
+                })
+                
+                updated_count = result.rowcount
+                conn.commit()
+                
+                if updated_count > 0:
+                    logger.info(f"✅ Updated category for '{description}': {category}")
+                else:
+                    logger.warning(f"⚠️  No transactions found to update: {description}")
+                
+                return updated_count
+                
+        except Exception as e:
+            log_error(logger, e, "update_category")
+            return 0
+
+    def bulk_update_category(self, description: str, category: str) -> int:
+        """Update category for all transactions matching description."""
+        user_id = self.get_user_id()
+        log_data_access(logger, "bulk_update_category", user_id, f"Bulk updating category for: {description}")
+        
+        try:
+            with self.engine.connect() as conn:
+                result = conn.execute(text("""
+                    UPDATE transactions 
+                    SET category = :category, updated_at = CURRENT_TIMESTAMP
+                    WHERE user_id = :user_id AND description = :description
+                """), {
+                    'user_id': user_id,
+                    'description': description,
+                    'category': category
+                })
+                
+                updated_count = result.rowcount
+                conn.commit()
+                
+                logger.info(f"✅ Bulk updated {updated_count} transactions for '{description}': {category}")
+                return updated_count
+                
+        except Exception as e:
+            log_error(logger, e, "bulk_update_category")
+            return 0
+
     def close(self):
         """Close database connection."""
         if hasattr(self, 'engine'):
