@@ -25,7 +25,7 @@ class MappingRow(BaseModel):
 
 class MatchResult(BaseModel):
     category: Optional[str]
-    strategy: Literal['keyword', 'fuzzy', 'llm']
+    strategy: Literal['keyword', 'fuzzy', 'llm', 'none']
     confidence: float = Field(ge=0.0, le=1.0)
     keyword_used: Optional[str] = None
     note: Optional[str] = None

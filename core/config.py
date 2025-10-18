@@ -16,6 +16,8 @@ class Settings(BaseSettings):
 
     # Database settings
     database_path: str = "data/transactions.db"
+    database_url: Optional[str] = None
+    database_type: str = "sqlite"  # sqlite or postgresql
     
     # Categorization settings
     keyword_confidence: float = 0.95
@@ -23,6 +25,8 @@ class Settings(BaseSettings):
     fuzzy_confidence_threshold: float = 0.8
     llm_confidence: float = 0.75
     min_word_length: int = 3
+    min_learning_confidence: float = 0.9  # Only learn from high-confidence corrections
+    enable_multi_strategy_boost: bool = True  # Boost confidence when strategies agree
     
     # OpenAI settings
     openai_api_key: Optional[str] = None
@@ -36,6 +40,11 @@ class Settings(BaseSettings):
     
     # File upload limits
     max_file_size_mb: int = 10
+    
+    # Environment settings
+    debug: bool = False
+    environment: str = "development"
+    secret_key: Optional[str] = None
     
     class Config:
         env_file = ".env"

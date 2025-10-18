@@ -142,7 +142,8 @@ class TransactionService:
         transaction_date: str,
         categories: List[str],
         llm_api_key: Optional[str] = None,
-        fuzzy_threshold: Optional[int] = None
+        fuzzy_threshold: Optional[int] = None,
+        amount: Optional[float] = None
     ) -> Dict[str, Any]:
         """
         Suggest category for a single transaction.
@@ -153,6 +154,7 @@ class TransactionService:
             categories: Available categories
             llm_api_key: OpenAI API key
             fuzzy_threshold: Fuzzy match threshold
+            amount: Transaction amount for context
 
         Returns:
             Dict with suggestion details
@@ -161,14 +163,16 @@ class TransactionService:
         df = self.db.load_transactions()
         vendor_map = build_vendor_map(df)
 
-        # Get category suggestion
+        # Get category suggestion with enhanced context
         result = agent_choose_category(
             description,
             self.mappings,
             vendor_map,
             categories,
             llm_api_key,
-            fuzzy_threshold
+            fuzzy_threshold,
+            amount,
+            transaction_date
         )
 
         return {
@@ -276,7 +280,7 @@ class TransactionService:
         # Build vendor map
         vendor_map = build_vendor_map(df)
 
-        # Apply categorization
+        # Apply categorization with enhanced context
         df_categorized = apply_categorization(
             df,
             self.mappings,

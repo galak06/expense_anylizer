@@ -86,8 +86,9 @@ services:
     # Auto-deploy on git push
     autoDeploy: true
     
-    # Optional: Persistent Disk for Data (Uncomment if needed)
-    # This ensures data persists across deployments
+    # Persistent Disk for Data - REQUIRES STARTER PLAN ($7/month)
+    # Disks are not supported for free instance types
+    # Uncomment ONLY if you upgrade to Starter plan ($7/month)
     # disks:
     #   - name: data-disk
     #     mountPath: /app/data
