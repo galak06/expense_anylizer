@@ -225,14 +225,14 @@ def load_transactions(file_path: str) -> pd.DataFrame:
         raise ValueError(f"Could not detect required columns. Found: date={date_col}, desc={desc_col}, amount={amount_col}")
 
     result_df = pd.DataFrame({
-        'Date': pd.to_datetime(df[date_col], errors='coerce', dayfirst=True),
-        'Description': df[desc_col].astype(str),
-        'Amount': df[amount_col],
-        'Category': None,
+        'date': pd.to_datetime(df[date_col], errors='coerce', dayfirst=True),
+        'description': df[desc_col].astype(str),
+        'amount': df[amount_col],
+        'category': None,
         'Month': pd.to_datetime(df[date_col], errors='coerce', dayfirst=True).dt.strftime('%Y-%m')
     })
 
-    return result_df.dropna(subset=['Date'])
+    return result_df.dropna(subset=['date'])
 
 
 def parse_leumi_html(file_path: str) -> Tuple[pd.DataFrame, str]:
@@ -313,11 +313,11 @@ def parse_leumi_html(file_path: str) -> Tuple[pd.DataFrame, str]:
             
             # Create transaction record
             transaction = {
-                'Date': pd.to_datetime(date_str, format='%d/%m/%Y', errors='coerce'),
-                'Description': description,
-                'Amount': amount,
-                'Category': category,
-                'Account': f"Leumi {account_number}",
+                'date': pd.to_datetime(date_str, format='%d/%m/%Y', errors='coerce'),
+                'description': description,
+                'amount': amount,
+                'category': category,
+                'account': f"Leumi {account_number}",
                 'Month': pd.to_datetime(date_str, format='%d/%m/%Y', errors='coerce').strftime('%Y-%m'),
                 'Reference': reference,
                 'Note': note
@@ -329,7 +329,7 @@ def parse_leumi_html(file_path: str) -> Tuple[pd.DataFrame, str]:
         result_df = pd.DataFrame(transactions)
         
         # Remove rows with invalid dates
-        result_df = result_df.dropna(subset=['Date'])
+        result_df = result_df.dropna(subset=['date'])
         
         return result_df, account_number
         

@@ -476,6 +476,210 @@ class PostgreSQLTransactionDB:
             log_error(logger, e, "bulk_update_category")
             return 0
 
+    def get_statistics(self) -> Dict[str, Any]:
+        """Get transaction statistics for the user."""
+        user_id = self.get_user_id()
+        log_data_access(logger, "get_statistics", user_id, "Retrieving transaction statistics")
+        
+        try:
+            with self.engine.connect() as conn:
+                # Get total count
+                result = conn.execute(text("""
+                    SELECT COUNT(*) 
+                    FROM transactions 
+                    WHERE user_id = :user_id
+                """), {'user_id': user_id})
+                total_count = result.fetchone()[0]
+                
+                # Get uncategorized count
+                result = conn.execute(text("""
+                    SELECT COUNT(*) 
+                    FROM transactions 
+                    WHERE user_id = :user_id AND (category IS NULL OR category = '')
+                """), {'user_id': user_id})
+                uncategorized_count = result.fetchone()[0]
+                
+                # Get date range
+                result = conn.execute(text("""
+                    SELECT MIN(date), MAX(date)
+                    FROM transactions 
+                    WHERE user_id = :user_id
+                """), {'user_id': user_id})
+                date_range = result.fetchone()
+                start_date = date_range[0] if date_range[0] else None
+                end_date = date_range[1] if date_range[1] else None
+                
+                # Get total amount
+                result = conn.execute(text("""
+                    SELECT SUM(amount)
+                    FROM transactions 
+                    WHERE user_id = :user_id
+                """), {'user_id': user_id})
+                total_amount = result.fetchone()[0] or 0
+                
+                # Get top categories
+                result = conn.execute(text("""
+                    SELECT category, COUNT(*) as count
+                    FROM transactions 
+                    WHERE user_id = :user_id AND category IS NOT NULL AND category != ''
+                    GROUP BY category
+                    ORDER BY count DESC
+                    LIMIT 5
+                """), {'user_id': user_id})
+                top_categories = [{'category': row[0], 'count': row[1]} for row in result.fetchall()]
+                
+                # Calculate categorized count
+                categorized_count = total_count - uncategorized_count
+                
+                stats = {
+                    'total_transactions': total_count,
+                    'categorized_count': categorized_count,
+                    'uncategorized_count': uncategorized_count,
+                    'min_date': start_date.strftime('%Y-%m-%d') if start_date else None,
+                    'max_date': end_date.strftime('%Y-%m-%d') if end_date else None,
+                    'total_amount': float(total_amount),
+                    'top_categories': top_categories
+                }
+                
+                logger.info(f"✅ Retrieved statistics: {total_count} total, {uncategorized_count} uncategorized")
+                return stats
+                
+        except Exception as e:
+            log_error(logger, e, "get_statistics")
+            return {
+                'total_transactions': 0,
+                'categorized_count': 0,
+                'uncategorized_count': 0,
+                'min_date': None,
+                'max_date': None,
+                'total_amount': 0.0,
+                'top_categories': []
+            }
+
+    def load_transactions(
+        self,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        category: Optional[str] = None,
+        account: Optional[str] = None,
+        limit: Optional[int] = None,
+        user_id: Optional[int] = None
+    ) -> pd.DataFrame:
+        """
+        Load transactions from database with optional filters.
+
+        Args:
+            start_date: Filter by start date (YYYY-MM-DD)
+            end_date: Filter by end date (YYYY-MM-DD)
+            category: Filter by category
+            account: Filter by account
+            limit: Limit number of results
+            user_id: User ID to filter by (uses self.user_id if not provided)
+
+        Returns:
+            DataFrame with transactions
+        """
+        # Use provided user_id or fall back to instance user_id
+        current_user_id = user_id if user_id is not None else self.user_id
+        if current_user_id is None:
+            raise ValueError("user_id must be provided or set on the TransactionDB instance")
+
+        log_data_access(logger, "load_transactions", current_user_id, "Loading transactions with filters")
+        
+        try:
+            with self.engine.connect() as conn:
+                # Build the query dynamically
+                query = """
+                    SELECT date, description, amount, category, account, 
+                           EXTRACT(YEAR FROM date) || '-' || LPAD(EXTRACT(MONTH FROM date)::text, 2, '0') as month
+                    FROM transactions 
+                    WHERE user_id = :user_id
+                """
+                params = {'user_id': current_user_id}
+
+                if start_date:
+                    query += " AND date >= :start_date"
+                    params['start_date'] = start_date
+
+                if end_date:
+                    query += " AND date <= :end_date"
+                    params['end_date'] = end_date
+
+                if category:
+                    query += " AND category = :category"
+                    params['category'] = category
+
+                if account:
+                    query += " AND account = :account"
+                    params['account'] = account
+
+                query += " ORDER BY date DESC"
+
+                if limit:
+                    query += " LIMIT :limit"
+                    params['limit'] = limit
+
+                df = pd.read_sql_query(query, conn, params=params)
+
+                if not df.empty:
+                    df['date'] = pd.to_datetime(df['date'])
+                    df['description'] = df['description']
+                    df['amount'] = df['amount']
+                    df['category'] = df['category']
+                    df['account'] = df['account']
+                    df['Month'] = df['month']
+                    df = df[['date', 'description', 'amount', 'category', 'account', 'Month']]
+
+                logger.info(f"✅ Loaded {len(df)} transactions")
+                return df
+                
+        except Exception as e:
+            log_error(logger, e, "load_transactions")
+            return pd.DataFrame()
+
+    def get_upload_sessions(self, user_id: Optional[int] = None) -> List[dict]:
+        """
+        Get all upload sessions for a user.
+        
+        Args:
+            user_id: User ID (uses self.user_id if not provided)
+            
+        Returns:
+            List of upload session dictionaries
+        """
+        current_user_id = user_id if user_id is not None else self.user_id
+        if current_user_id is None:
+            raise ValueError("user_id must be provided or set on the TransactionDB instance")
+        
+        log_data_access(logger, "get_upload_sessions", current_user_id, "Retrieving upload sessions")
+        
+        try:
+            with self.engine.connect() as conn:
+                result = conn.execute(text("""
+                    SELECT id, filename, upload_date, file_size, transactions_count, account
+                    FROM upload_sessions
+                    WHERE user_id = :user_id
+                    ORDER BY upload_date DESC
+                """), {'user_id': current_user_id})
+                
+                sessions = []
+                for row in result.fetchall():
+                    sessions.append({
+                        'id': row[0],
+                        'filename': row[1],
+                        'upload_date': row[2],
+                        'file_size': row[3],
+                        'transactions_count': row[4],
+                        'account': row[5]
+                    })
+                
+                logger.info(f"✅ Retrieved {len(sessions)} upload sessions")
+                return sessions
+                
+        except Exception as e:
+            log_error(logger, e, "get_upload_sessions")
+            return []
+
     def close(self):
         """Close database connection."""
         if hasattr(self, 'engine'):

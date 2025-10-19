@@ -19,6 +19,19 @@ class Settings(BaseSettings):
     database_url: Optional[str] = None
     database_type: str = "sqlite"  # sqlite or postgresql
     
+    # PostgreSQL connection details
+    database_host: Optional[str] = None
+    database_port: Optional[int] = None
+    database_name: Optional[str] = None
+    database_user: Optional[str] = None
+    database_password: Optional[str] = None
+    
+    # Database connection pool settings
+    db_pool_size: int = 5
+    db_max_overflow: int = 10
+    db_pool_timeout: int = 30
+    db_pool_recycle: int = 3600
+    
     # Categorization settings
     keyword_confidence: float = 0.95
     fuzzy_match_threshold: int = 86

@@ -9,6 +9,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from .config import get_settings
 from .logging_config import get_logger, log_security_event, log_data_access, log_error
+from .database_factory import create_database
 
 logger = get_logger(__name__)
 
@@ -22,6 +23,7 @@ class AuthManager:
             db_path = settings.database_path
 
         self.db_path = db_path
+        self.db = create_database()
         self._ensure_db_directory()
         self._init_auth_tables()
 
@@ -162,20 +164,21 @@ class AuthManager:
             Tuple of (success: bool, message: str, user_data: Optional[Dict])
         """
         try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute("""
-                    SELECT id, username, email, password_hash, full_name, is_active
+            with self.db.engine.connect() as conn:
+                from sqlalchemy import text
+                result = conn.execute(text("""
+                    SELECT id, username, email, password_hash, is_active
                     FROM users
-                    WHERE username = ?
-                """, (username,))
+                    WHERE username = :username
+                """), {'username': username})
 
-                user = cursor.fetchone()
+                user = result.fetchone()
 
                 if not user:
                     log_security_event(logger, "LOGIN_FAILED", f"Invalid username: {username}")
                     return False, "Invalid username or password", None
 
-                user_id, username, email, password_hash, full_name, is_active = user
+                user_id, username, email, password_hash, is_active = user
 
                 # Check if account is active
                 if not is_active:
@@ -187,13 +190,8 @@ class AuthManager:
                     log_security_event(logger, "LOGIN_FAILED", f"Invalid password for user: {username}")
                     return False, "Invalid username or password", None
 
-                # Update last login
-                conn.execute("""
-                    UPDATE users
-                    SET last_login = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                """, (user_id,))
-                conn.commit()
+                # Note: last_login column doesn't exist in PostgreSQL schema
+                # Skipping last login update
 
                 log_data_access(logger, "LOGIN", user_id, f"Successful login for {username}")
 
@@ -201,8 +199,7 @@ class AuthManager:
                 user_data = {
                     'id': user_id,
                     'username': username,
-                    'email': email,
-                    'full_name': full_name
+                    'email': email
                 }
 
                 # Create session token for persistent login
@@ -413,11 +410,16 @@ class AuthManager:
             token = secrets.token_urlsafe(32)
             expires_at = datetime.now() + timedelta(days=expiry_days)
 
-            with sqlite3.connect(self.db_path) as conn:
-                conn.execute("""
-                    INSERT INTO session_tokens (user_id, token, expires_at)
-                    VALUES (?, ?, ?)
-                """, (user_id, token, expires_at))
+            with self.db.engine.connect() as conn:
+                conn.execute(text("""
+                    INSERT INTO session_tokens (user_id, token, expires_at, is_valid)
+                    VALUES (:user_id, :token, :expires_at, :is_valid)
+                """), {
+                    'user_id': user_id,
+                    'token': token,
+                    'expires_at': expires_at,
+                    'is_valid': True
+                })
                 conn.commit()
 
             log_security_event(logger, "SESSION_CREATED", f"Session token created for user_id: {user_id}")
@@ -438,30 +440,30 @@ class AuthManager:
             User data dictionary or None if invalid
         """
         try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute("""
-                    SELECT st.user_id, st.expires_at, u.username, u.email, u.full_name, u.is_active
+            with self.db.engine.connect() as conn:
+                result = conn.execute(text("""
+                    SELECT st.user_id, st.expires_at, u.username, u.email, u.is_active
                     FROM session_tokens st
                     JOIN users u ON st.user_id = u.id
-                    WHERE st.token = ? AND st.is_valid = 1
-                """, (token,))
+                    WHERE st.token = :token AND st.is_valid = true
+                """), {'token': token})
 
-                result = cursor.fetchone()
+                row = result.fetchone()
 
-                if not result:
+                if not row:
                     return None
 
-                user_id, expires_at, username, email, full_name, is_active = result
+                user_id, expires_at, username, email, is_active = row
 
                 # Check if token has expired
-                expires_at_dt = datetime.fromisoformat(expires_at)
+                expires_at_dt = datetime.fromisoformat(str(expires_at))
                 if datetime.now() > expires_at_dt:
                     # Invalidate expired token
-                    conn.execute("""
+                    conn.execute(text("""
                         UPDATE session_tokens
-                        SET is_valid = 0
-                        WHERE token = ?
-                    """, (token,))
+                        SET is_valid = false
+                        WHERE token = :token
+                    """), {'token': token})
                     conn.commit()
                     log_security_event(logger, "SESSION_EXPIRED", f"Expired token for user: {username}")
                     return None
@@ -471,21 +473,12 @@ class AuthManager:
                     log_security_event(logger, "SESSION_REJECTED", f"Disabled account: {username}")
                     return None
 
-                # Update last login
-                conn.execute("""
-                    UPDATE users
-                    SET last_login = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                """, (user_id,))
-                conn.commit()
-
                 log_data_access(logger, "SESSION_VALIDATED", user_id, f"Session validated for {username}")
 
                 return {
                     'id': user_id,
                     'username': username,
-                    'email': email,
-                    'full_name': full_name
+                    'email': email
                 }
 
         except Exception as e:
@@ -503,12 +496,12 @@ class AuthManager:
             True if successful, False otherwise
         """
         try:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.execute("""
+            with self.db.engine.connect() as conn:
+                conn.execute(text("""
                     UPDATE session_tokens
-                    SET is_valid = 0
-                    WHERE token = ?
-                """, (token,))
+                    SET is_valid = false
+                    WHERE token = :token
+                """), {'token': token})
                 conn.commit()
 
             log_security_event(logger, "SESSION_INVALIDATED", "Session token invalidated")

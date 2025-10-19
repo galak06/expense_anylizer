@@ -148,9 +148,9 @@ class TransactionDB:
         log_data_access(logger, "CREATE", current_user_id, f"Saving {len(df)} transactions")
 
         # Prepare DataFrame for insertion
-        columns_to_save = ['Date', 'Description', 'Amount', 'Category', 'Month']
-        if 'Account' in df.columns:
-            columns_to_save.append('Account')
+        columns_to_save = ['date', 'description', 'amount', 'category', 'Month']
+        if 'account' in df.columns:
+            columns_to_save.append('account')
 
         df_save = df[columns_to_save].copy()
 
@@ -161,12 +161,12 @@ class TransactionDB:
 
         # Rename columns to match database schema
         column_mapping = {
-            'Date': 'date',
-            'Description': 'description',
-            'Amount': 'amount',
-            'Category': 'category',
+            'date': 'date',
+            'description': 'description',
+            'amount': 'amount',
+            'category': 'category',
             'Month': 'month',
-            'Account': 'account',
+            'account': 'account',
             'user_id': 'user_id',
             'upload_id': 'upload_id'
         }
@@ -284,13 +284,13 @@ class TransactionDB:
             df = pd.read_sql_query(query, conn, params=params)
 
         if not df.empty:
-            df['Date'] = pd.to_datetime(df['date'])
-            df['Description'] = df['description']
-            df['Amount'] = df['amount']
-            df['Category'] = df['category']
-            df['Account'] = df['account']
+            df['date'] = pd.to_datetime(df['date'])
+            df['description'] = df['description']
+            df['amount'] = df['amount']
+            df['category'] = df['category']
+            df['account'] = df['account']
             df['Month'] = df['month']
-            df = df[['Date', 'Description', 'Amount', 'Category', 'Account', 'Month']]
+            df = df[['date', 'description', 'amount', 'category', 'account', 'Month']]
 
         return df
 
@@ -515,21 +515,21 @@ class TransactionDB:
             raise ValueError("user_id must be provided or set on the TransactionDB instance")
         
         # Prepare DataFrame for insertion
-        columns_to_save = ['Date', 'Description', 'Amount', 'Category', 'Month']
-        if 'Account' in df.columns:
-            columns_to_save.append('Account')
+        columns_to_save = ['date', 'description', 'amount', 'category', 'Month']
+        if 'account' in df.columns:
+            columns_to_save.append('account')
         
         df_save = df[columns_to_save].copy()
         df_save['user_id'] = current_user_id
         
         # Rename columns to match database schema
         column_mapping = {
-            'Date': 'date',
-            'Description': 'description',
-            'Amount': 'amount',
-            'Category': 'category',
+            'date': 'date',
+            'description': 'description',
+            'amount': 'amount',
+            'category': 'category',
             'Month': 'month',
-            'Account': 'account',
+            'account': 'account',
             'user_id': 'user_id'
         }
         df_save.columns = [column_mapping.get(col, col.lower()) for col in df_save.columns]

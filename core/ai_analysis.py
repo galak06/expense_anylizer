@@ -14,7 +14,7 @@ def generate_ai_insights(df: pd.DataFrame, api_key: str) -> Dict[str, Any]:
     Generate AI-powered insights and recommendations per account.
     
     Args:
-        df: DataFrame with transactions (must have 'Account', 'Amount', 'Category', 'Date' columns)
+        df: DataFrame with transactions (must have 'account', 'amount', 'category', 'date' columns)
         api_key: OpenAI API key
         
     Returns:
@@ -27,7 +27,7 @@ def generate_ai_insights(df: pd.DataFrame, api_key: str) -> Dict[str, Any]:
         raise ValueError("No transactions to analyze")
     
     # Validate required columns
-    required_cols = ['Account', 'Amount', 'Category', 'Date']
+    required_cols = ['account', 'amount', 'category', 'date']
     missing_cols = [col for col in required_cols if col not in df.columns]
     if missing_cols:
         raise ValueError(f"Missing required columns: {missing_cols}")
@@ -47,25 +47,25 @@ def generate_ai_insights(df: pd.DataFrame, api_key: str) -> Dict[str, Any]:
 def _prepare_analysis_data(df: pd.DataFrame) -> Dict[str, Any]:
     """Prepare aggregated data for AI analysis with enhanced metrics."""
     # Convert Date to datetime if needed
-    df['Date'] = pd.to_datetime(df['Date'])
+    df['date'] = pd.to_datetime(df['date'])
 
     # Group by account and prepare data
     accounts_data = {}
     total_spending = 0
     total_income = 0
 
-    for account in df['Account'].unique():
+    for account in df['account'].unique():
         if pd.isna(account):
             continue
 
-        account_df = df[df['Account'] == account].copy()
+        account_df = df[df['account'] == account].copy()
 
         # Calculate spending and income
-        expenses = account_df[account_df['Amount'] < 0]
-        income = account_df[account_df['Amount'] > 0]
+        expenses = account_df[account_df['amount'] < 0]
+        income = account_df[account_df['amount'] > 0]
 
-        total_spent = abs(expenses['Amount'].sum()) if not expenses.empty else 0
-        total_earned = income['Amount'].sum() if not income.empty else 0
+        total_spent = abs(expenses['amount'].sum()) if not expenses.empty else 0
+        total_earned = income['amount'].sum() if not income.empty else 0
 
         total_spending += total_spent
         total_income += total_earned
@@ -74,7 +74,7 @@ def _prepare_analysis_data(df: pd.DataFrame) -> Dict[str, Any]:
         category_breakdown = {}
         category_percentages = {}
         if not expenses.empty:
-            category_totals = expenses.groupby('Category')['Amount'].sum().abs()
+            category_totals = expenses.groupby('category')['amount'].sum().abs()
             category_breakdown = {cat: float(amount) for cat, amount in category_totals.items()}
             # Calculate percentages
             for cat, amount in category_breakdown.items():
@@ -85,8 +85,8 @@ def _prepare_analysis_data(df: pd.DataFrame) -> Dict[str, Any]:
         month_over_month_change = None
         if not expenses.empty:
             expenses_copy = expenses.copy()
-            expenses_copy['Month'] = expenses_copy['Date'].dt.to_period('M')
-            monthly_totals = expenses_copy.groupby('Month')['Amount'].sum().abs()
+            expenses_copy['Month'] = expenses_copy['date'].dt.to_period('M')
+            monthly_totals = expenses_copy.groupby('Month')['amount'].sum().abs()
 
             # Sort by month
             monthly_totals = monthly_totals.sort_index()
@@ -110,8 +110,8 @@ def _prepare_analysis_data(df: pd.DataFrame) -> Dict[str, Any]:
         # Top vendors with transaction count
         top_vendors = []
         if not expenses.empty:
-            vendor_stats = expenses.groupby('Description').agg({
-                'Amount': ['sum', 'count']
+            vendor_stats = expenses.groupby('description').agg({
+                'amount': ['sum', 'count']
             }).reset_index()
             vendor_stats.columns = ['vendor', 'total', 'count']
             vendor_stats['total'] = vendor_stats['total'].abs()
@@ -131,18 +131,18 @@ def _prepare_analysis_data(df: pd.DataFrame) -> Dict[str, Any]:
         spending_stats = {}
         if not expenses.empty:
             spending_stats = {
-                'avg_transaction': round(float(expenses['Amount'].abs().mean()), 2),
-                'median_transaction': round(float(expenses['Amount'].abs().median()), 2),
-                'largest_transaction': round(float(expenses['Amount'].abs().max()), 2),
-                'smallest_transaction': round(float(expenses['Amount'].abs().min()), 2)
+                'avg_transaction': round(float(expenses['amount'].abs().mean()), 2),
+                'median_transaction': round(float(expenses['amount'].abs().median()), 2),
+                'largest_transaction': round(float(expenses['amount'].abs().max()), 2),
+                'smallest_transaction': round(float(expenses['amount'].abs().min()), 2)
             }
 
         # Calculate days covered and daily average
         date_range = {
-            'start': account_df['Date'].min().strftime('%Y-%m-%d'),
-            'end': account_df['Date'].max().strftime('%Y-%m-%d')
+            'start': account_df['date'].min().strftime('%Y-%m-%d'),
+            'end': account_df['date'].max().strftime('%Y-%m-%d')
         }
-        days_covered = (account_df['Date'].max() - account_df['Date'].min()).days + 1
+        days_covered = (account_df['date'].max() - account_df['date'].min()).days + 1
         daily_avg_spending = round(total_spent / days_covered, 2) if days_covered > 0 else 0
 
         # Calculate savings rate

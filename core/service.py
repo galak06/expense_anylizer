@@ -6,6 +6,7 @@ import pandas as pd
 from typing import Optional, List, Dict, Any
 from datetime import datetime, date
 from .database import TransactionDB
+from .database_factory import create_database
 from .io import load_transactions as load_from_file
 from .clean import normalize_df, detect_negative_amounts
 from .map import (
@@ -20,7 +21,7 @@ class TransactionService:
 
     def __init__(self, db: Optional[TransactionDB] = None, user_id: Optional[int] = None):
         self.user_id = user_id
-        self.db = db or TransactionDB(user_id=user_id)
+        self.db = db or create_database(user_id=user_id)
         self.mappings = load_mapping()
 
     def import_from_file(self, file_path: str, all_expenses: bool = False, account: Optional[str] = None) -> Dict[str, Any]:
@@ -50,7 +51,7 @@ class TransactionService:
 
             # Add account column if provided
             if account:
-                df['Account'] = account
+                df['account'] = account
 
             # Save to database with duplicate detection and upload tracking
             save_result = self.db.save_transactions(df, upload_id=upload_id)
@@ -68,8 +69,8 @@ class TransactionService:
                 'invalid_dates': save_result['invalid_dates'],
                 'skipped_rows': save_result.get('skipped_rows', []),  # Include skipped rows for review
                 'date_range': {
-                    'start': df['Date'].min().strftime('%Y-%m-%d') if not df.empty else None,
-                    'end': df['Date'].max().strftime('%Y-%m-%d') if not df.empty else None
+                    'start': df['date'].min().strftime('%Y-%m-%d') if not df.empty else None,
+                    'end': df['date'].max().strftime('%Y-%m-%d') if not df.empty else None
                 }
             }
         except Exception as e:
@@ -110,11 +111,10 @@ class TransactionService:
             Filtered DataFrame
         """
         # Load from database
-        df = self.db.load_transactions(
+        df = self.db.get_transactions(
             start_date=start_date,
             end_date=end_date,
             category=category,
-            account=account,
             limit=limit
         )
 
@@ -123,16 +123,16 @@ class TransactionService:
 
         # Apply additional filters
         if only_uncategorized:
-            df = df[df['Category'].isna()]
+            df = df[df['category'].isna()]
 
         if description:
-            df = df[df['Description'].str.contains(description, case=False, na=False)]
+            df = df[df['description'].str.contains(description, case=False, na=False)]
 
         if min_amount is not None:
-            df = df[df['Amount'] >= min_amount]
+            df = df[df['amount'] >= min_amount]
 
         if max_amount is not None:
-            df = df[df['Amount'] <= max_amount]
+            df = df[df['amount'] <= max_amount]
 
         return df
 
@@ -294,9 +294,9 @@ class TransactionService:
         # Update database for categorized transactions
         updated_count = 0
         for _, row in df_categorized.iterrows():
-            if pd.notna(row['Category']):
-                date_str = row['Date'].strftime('%Y-%m-%d')
-                if self.db.update_category(row['Description'], date_str, row['Category']):
+            if pd.notna(row['category']):
+                date_str = row['date'].strftime('%Y-%m-%d')
+                if self.db.update_category(row['description'], date_str, row['category']):
                     updated_count += 1
 
         return {

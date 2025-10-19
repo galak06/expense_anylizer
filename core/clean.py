@@ -77,7 +77,7 @@ def coerce_amount(amount: Union[str, float, int]) -> float:
     return 0.0
 
 
-TEXT_COLUMNS = ['Description', 'Category', 'Account']
+TEXT_COLUMNS = ['description', 'category', 'account']
 
 
 def normalize_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -89,8 +89,8 @@ def normalize_df(df: pd.DataFrame) -> pd.DataFrame:
                 lambda x: normalize_text(x) if pd.notna(x) else None
             )
 
-    if 'Amount' in result_df.columns:
-        result_df['Amount'] = result_df['Amount'].apply(coerce_amount)
+    if 'amount' in result_df.columns:
+        result_df['amount'] = result_df['amount'].apply(coerce_amount)
 
     return result_df
 
@@ -113,7 +113,7 @@ def _is_expense_transaction(description: str) -> bool:
     return has_expense_keyword and not has_income_keyword
 
 
-def detect_negative_amounts(df: pd.DataFrame, amount_col: str = 'Amount', all_expenses: bool = False) -> pd.DataFrame:
+def detect_negative_amounts(df: pd.DataFrame, amount_col: str = 'amount', all_expenses: bool = False) -> pd.DataFrame:
     """
     Convert positive amounts to negative for expense transactions.
 
@@ -141,7 +141,7 @@ def detect_negative_amounts(df: pd.DataFrame, amount_col: str = 'Amount', all_ex
             if amount <= 0:
                 continue
 
-            description = str(row.get('Description', ''))
+            description = str(row.get('description', ''))
             if _is_expense_transaction(description):
                 result_df.at[idx, amount_col] = -abs(amount)
 

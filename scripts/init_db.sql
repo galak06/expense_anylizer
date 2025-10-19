@@ -66,6 +66,16 @@ CREATE TABLE IF NOT EXISTS category_mappings (
     UNIQUE(user_id, keyword)
 );
 
+-- Create session tokens table for persistent login
+CREATE TABLE IF NOT EXISTS session_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    token VARCHAR(255) UNIQUE NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    is_valid BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
@@ -74,6 +84,8 @@ CREATE INDEX IF NOT EXISTS idx_transactions_amount ON transactions(amount);
 CREATE INDEX IF NOT EXISTS idx_user_profiles_user_id ON user_profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_categories_user_id ON categories(user_id);
 CREATE INDEX IF NOT EXISTS idx_category_mappings_user_id ON category_mappings(user_id);
+CREATE INDEX IF NOT EXISTS idx_session_tokens_token ON session_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_session_tokens_user_id ON session_tokens(user_id);
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()

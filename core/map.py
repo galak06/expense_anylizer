@@ -307,7 +307,7 @@ def agent_choose_category(
     return best_result
 
 
-def build_vendor_map(df: pd.DataFrame, desc_col: str = 'Description', cat_col: str = 'Category') -> Dict[str, str]:
+def build_vendor_map(df: pd.DataFrame, desc_col: str = 'description', cat_col: str = 'category') -> Dict[str, str]:
     vendor_map = {}
 
     for _, row in df.iterrows():
@@ -332,16 +332,16 @@ def apply_categorization(
     result_df = df.copy()
 
     for idx, row in result_df.iterrows():
-        if only_uncategorized and pd.notna(row.get('Category')):
+        if only_uncategorized and pd.notna(row.get('category')):
             continue
 
-        description = str(row.get('Description', ''))
+        description = str(row.get('description', ''))
         if not description:
             continue
 
         # Extract context for enhanced categorization
-        amount = row.get('Amount')
-        date = row.get('Date')
+        amount = row.get('amount')
+        date = row.get('date')
         if hasattr(date, 'strftime'):
             date = date.strftime('%Y-%m-%d')
         elif date is not None:
@@ -353,7 +353,7 @@ def apply_categorization(
         )
 
         if match_result.confidence >= 0.7:
-            result_df.at[idx, 'Category'] = match_result.category
+            result_df.at[idx, 'category'] = match_result.category
 
     return result_df
 

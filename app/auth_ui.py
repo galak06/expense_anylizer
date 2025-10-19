@@ -11,7 +11,11 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from core.auth import AuthManager
 
 # Initialize cookie manager
-cookie_manager = stx.CookieManager()
+@st.cache_resource
+def get_cookie_manager():
+    return stx.CookieManager()
+
+cookie_manager = get_cookie_manager()
 
 
 def render_login_page():
@@ -325,24 +329,32 @@ def require_auth():
         return
 
     # If not authenticated, try to restore session from cookie
-    cookies = cookie_manager.get_all()
+    try:
+        cookies = cookie_manager.get_all()
+        
+        if cookies and 'session_token' in cookies:
+            session_token = cookies['session_token']
+            
+            if session_token and session_token.strip():
+                # Show loading message while validating
+                with st.spinner('🔐 Restoring session...'):
+                    # Validate session token
+                    auth_manager = AuthManager()
+                    user_data = auth_manager.validate_session_token(session_token)
 
-    if cookies and 'session_token' in cookies:
-        session_token = cookies['session_token']
-
-        # Show loading message while validating
-        with st.spinner('🔐 Restoring session...'):
-            # Validate session token
-            auth_manager = AuthManager()
-            user_data = auth_manager.validate_session_token(session_token)
-
-            if user_data:
-                # Restore session
-                st.session_state.authenticated = True
-                user_data['session_token'] = session_token  # Keep token in session
-                st.session_state.user = user_data
-                st.rerun()
-                return
+                    if user_data:
+                        # Restore session
+                        st.session_state.authenticated = True
+                        user_data['session_token'] = session_token  # Keep token in session
+                        st.session_state.user = user_data
+                        st.rerun()
+                        return
+                    else:
+                        # Invalid token, clear cookie
+                        cookie_manager.delete('session_token')
+    except Exception as e:
+        # If there's any error with cookies, just continue to login
+        pass
 
     # If no valid session, show login page
     render_login_page()

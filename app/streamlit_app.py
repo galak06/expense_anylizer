@@ -536,8 +536,8 @@ def load_uploaded_file(uploaded_file):
 
         # Calculate file total BEFORE saving (for verification)
         # Since expenses are negative, we take absolute value of the sum of negative amounts
-        file_expenses = abs(df[df['Amount'] < 0]['Amount'].sum())
-        file_income = df[df['Amount'] > 0]['Amount'].sum()
+        file_expenses = abs(df[df['amount'] < 0]['amount'].sum())
+        file_income = df[df['amount'] > 0]['amount'].sum()
         file_transaction_count = len(df)
 
         st.session_state.transactions_df = df
@@ -575,10 +575,10 @@ def load_uploaded_file(uploaded_file):
         # Calculate and show cumulative database total (expenses only)
         db_df_after = st.session_state.service.get_transactions()
         if not db_df_after.empty:
-            cumulative_expenses = abs(db_df_after[db_df_after['Amount'] < 0]['Amount'].sum())
-            cumulative_income = db_df_after[db_df_after['Amount'] > 0]['Amount'].sum()
+            cumulative_expenses = abs(db_df_after[db_df_after['amount'] < 0]['amount'].sum())
+            cumulative_income = db_df_after[db_df_after['amount'] > 0]['amount'].sum()
             cumulative_count = len(db_df_after)
-            st.success(f"💰 **Cumulative Database Total - Expenses:** ₪{cumulative_expenses:,.2f} | Income: ₪{cumulative_income:,.2f} | Net: ₪{db_df_after['Amount'].sum():,.2f} ({cumulative_count} transactions)")
+            st.success(f"💰 **Cumulative Database Total - Expenses:** ₪{cumulative_expenses:,.2f} | Income: ₪{cumulative_income:,.2f} | Net: ₪{db_df_after['amount'].sum():,.2f} ({cumulative_count} transactions)")
 
         file_info = get_file_info(temp_path)
         st.json({
@@ -787,23 +787,23 @@ def render_sidebar():
         df = st.session_state.transactions_df
 
         date_range = None
-        if 'Date' in df.columns:
-            min_date = pd.to_datetime(df['Date']).min().date()
-            max_date = pd.to_datetime(df['Date']).max().date()
+        if 'date' in df.columns:
+            min_date = pd.to_datetime(df['date']).min().date()
+            max_date = pd.to_datetime(df['date']).max().date()
             date_range = st.date_input("Date Range", value=(min_date, max_date), min_value=min_date, max_value=max_date)
 
         amount_range = None
-        if 'Amount' in df.columns:
-            min_amount = float(df['Amount'].min())
-            max_amount = float(df['Amount'].max())
+        if 'amount' in df.columns:
+            min_amount = float(df['amount'].min())
+            max_amount = float(df['amount'].max())
             amount_range = st.slider("Amount Range", min_value=min_amount, max_value=max_amount, value=(min_amount, max_amount), format="%.2f")
 
         text_search = st.text_input("Search in Description", "")
 
         # Category filter
         selected_categories = []
-        if 'Category' in df.columns:
-            categories = sorted(df['Category'].dropna().unique().tolist())
+        if 'category' in df.columns:
+            categories = sorted(df['category'].dropna().unique().tolist())
 
             # Initialize session state if not exists
             if 'selected_categories' not in st.session_state:
@@ -835,22 +835,22 @@ def render_sidebar():
         if date_range and len(date_range) == 2:
             start_date, end_date = date_range
             filtered_df = filtered_df[
-                (pd.to_datetime(filtered_df['Date']).dt.date >= start_date) &
-                (pd.to_datetime(filtered_df['Date']).dt.date <= end_date)
+                (pd.to_datetime(filtered_df['date']).dt.date >= start_date) &
+                (pd.to_datetime(filtered_df['date']).dt.date <= end_date)
             ]
 
         if amount_range:
             min_amt, max_amt = amount_range
-            filtered_df = filtered_df[(filtered_df['Amount'] >= min_amt) & (filtered_df['Amount'] <= max_amt)]
+            filtered_df = filtered_df[(filtered_df['amount'] >= min_amt) & (filtered_df['amount'] <= max_amt)]
 
         if text_search:
-            filtered_df = filtered_df[filtered_df['Description'].str.contains(text_search, case=False, na=False)]
+            filtered_df = filtered_df[filtered_df['description'].str.contains(text_search, case=False, na=False)]
 
         if selected_categories:
-            filtered_df = filtered_df[filtered_df['Category'].isin(selected_categories)]
+            filtered_df = filtered_df[filtered_df['category'].isin(selected_categories)]
 
         if only_uncategorized:
-            filtered_df = filtered_df[filtered_df['Category'].isna()]
+            filtered_df = filtered_df[filtered_df['category'].isna()]
 
         st.session_state.filtered_df = filtered_df
 
@@ -926,10 +926,10 @@ def render_add_transaction_modal():
                     
                     # Create transaction
                     new_transaction = pd.DataFrame([{
-                        'Date': date_input,
-                        'Description': sanitized_description,
-                        'Amount': -abs(amount_input) if amount_input > 0 else amount_input,
-                        'Category': sanitized_category,
+                        'date': date_input,
+                        'description': sanitized_description,
+                        'amount': -abs(amount_input) if amount_input > 0 else amount_input,
+                        'category': sanitized_category,
                         'Month': date_input.strftime('%Y-%m')
                     }])
 
@@ -961,7 +961,7 @@ def render_batch_categorize_modal():
 
     with st.expander("🤖 Batch Categorize Uncategorized Transactions", expanded=True):
         df = st.session_state.transactions_df
-        uncategorized_count = df['Category'].isna().sum()
+        uncategorized_count = df['category'].isna().sum()
 
         st.write(f"**Uncategorized transactions:** {uncategorized_count}")
 
@@ -1082,14 +1082,14 @@ def render_global_search():
             # Apply search filter
             df = st.session_state.transactions_df
             mask = (
-                df['Description'].str.contains(sanitized_query, case=False, na=False) |
-                df['Category'].str.contains(sanitized_query, case=False, na=False)
+                df['description'].str.contains(sanitized_query, case=False, na=False) |
+                df['category'].str.contains(sanitized_query, case=False, na=False)
             )
 
             # Try to search by amount
             try:
                 amount = float(sanitized_query.replace('₪', '').replace(',', ''))
-                mask = mask | (df['Amount'].abs() == abs(amount))
+                mask = mask | (df['amount'].abs() == abs(amount))
             except:
                 pass
 
@@ -1138,20 +1138,20 @@ def display_actions():
 
                 with col1:
                     st.metric("Total Transactions", len(df))
-                    categorized = df['Category'].notna().sum()
+                    categorized = df['category'].notna().sum()
                     st.metric("Categorized", f"{categorized} ({(categorized/len(df)*100):.1f}%)")
 
                 with col2:
-                    total_expenses = df[df['Amount'] < 0]['Amount'].sum()
+                    total_expenses = df[df['amount'] < 0]['amount'].sum()
                     st.metric("Total Expenses", f"₪{abs(total_expenses):,.2f}")
-                    total_income = df[df['Amount'] > 0]['Amount'].sum()
+                    total_income = df[df['amount'] > 0]['amount'].sum()
                     st.metric("Total Income", f"₪{total_income:,.2f}")
 
                 with col3:
-                    net_amount = df['Amount'].sum()
+                    net_amount = df['amount'].sum()
                     st.metric("Net Amount", f"₪{net_amount:,.2f}")
-                    if 'Date' in df.columns:
-                        date_range = f"{df['Date'].min().strftime('%Y-%m-%d')} to {df['Date'].max().strftime('%Y-%m-%d')}"
+                    if 'date' in df.columns:
+                        date_range = f"{df['date'].min().strftime('%Y-%m-%d')} to {df['date'].max().strftime('%Y-%m-%d')}"
                         st.caption(f"📅 {date_range}")
 
                 if st.button("Close", key="close_quick_stats"):
@@ -1210,11 +1210,11 @@ def display_duplicates():
                 if st.button(f"➕ Add to Database", key=f"restore_dup_{idx}", type="primary"):
                     # Create DataFrame for this transaction
                     restore_df = pd.DataFrame([{
-                        'Date': pd.to_datetime(date),
-                        'Description': description,
-                        'Amount': amount,
-                        'Category': category,
-                        'Account': account,
+                        'date': pd.to_datetime(date),
+                        'description': description,
+                        'amount': amount,
+                        'category': category,
+                        'account': account,
                         'Month': pd.to_datetime(date).strftime('%Y-%m')
                     }])
 
@@ -1265,11 +1265,11 @@ def display_duplicates():
             for dup in st.session_state.skipped_duplicates:
                 try:
                     restore_df = pd.DataFrame([{
-                        'Date': pd.to_datetime(dup.get('date')),
-                        'Description': dup.get('description'),
-                        'Amount': dup.get('amount'),
-                        'Category': dup.get('category'),
-                        'Account': dup.get('account'),
+                        'date': pd.to_datetime(dup.get('date')),
+                        'description': dup.get('description'),
+                        'amount': dup.get('amount'),
+                        'category': dup.get('category'),
+                        'account': dup.get('account'),
                         'Month': pd.to_datetime(dup.get('date')).strftime('%Y-%m')
                     }])
 
@@ -1385,7 +1385,7 @@ def display_dashboard():
 
     # Large, prominent total expenses metric - ALWAYS show database total, not filtered
     db_df = st.session_state.transactions_df
-    total_expenses_db = db_df[db_df['Amount'] < 0]['Amount'].sum()
+    total_expenses_db = db_df[db_df['amount'] < 0]['amount'].sum()
 
     # Show if filters are active
     filters_active = 'filtered_df' in st.session_state and len(df) != len(db_df)
@@ -1397,7 +1397,7 @@ def display_dashboard():
 
     # Show filtered total if filters are active
     if filters_active:
-        total_expenses_filtered = df[df['Amount'] < 0]['Amount'].sum()
+        total_expenses_filtered = df[df['amount'] < 0]['amount'].sum()
         st.info(f"🔍 Filtered View: ₪{abs(total_expenses_filtered):,.2f} ({len(df)} of {len(db_df)} transactions)")
 
     st.divider()
@@ -1406,15 +1406,15 @@ def display_dashboard():
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        total_income_db = db_df[db_df['Amount'] > 0]['Amount'].sum()
+        total_income_db = db_df[db_df['amount'] > 0]['amount'].sum()
         st.metric("💰 Income (DB Total)", f"₪{total_income_db:,.2f}")
 
     with col2:
-        net_amount_db = db_df['Amount'].sum()
+        net_amount_db = db_df['amount'].sum()
         st.metric("📊 Net (DB Total)", f"₪{net_amount_db:,.2f}")
 
     with col3:
-        categorized_pct_db = (db_df['Category'].notna().sum() / len(db_df)) * 100 if len(db_df) > 0 else 0
+        categorized_pct_db = (db_df['category'].notna().sum() / len(db_df)) * 100 if len(db_df) > 0 else 0
         st.metric("🏷️ Categorized (DB)", f"{categorized_pct_db:.1f}%")
 
     with col4:
@@ -1446,10 +1446,10 @@ def display_dashboard():
             fig = px.pie(
                 category_df.head(8),
                 values='Total_Expenses',
-                names='Category',
+                names='category',
                 title="",
-                color='Category',
-                color_discrete_map={cat: get_category_color(cat) for cat in category_df['Category'].head(8)}
+                color='category',
+                color_discrete_map={cat: get_category_color(cat) for cat in category_df['category'].head(8)}
             )
             fig.update_traces(textposition='inside', textinfo='percent+label')
             st.plotly_chart(fig, use_container_width=True)
@@ -1460,7 +1460,7 @@ def display_suggestions():
         return
 
     df = st.session_state.get('filtered_df', st.session_state.transactions_df)
-    uncategorized_df = df[df['Category'].isna()]
+    uncategorized_df = df[df['category'].isna()]
 
     if uncategorized_df.empty:
         st.success("🎉 All transactions are categorized!")
@@ -1480,7 +1480,7 @@ def display_suggestions():
             suggestions = []
             for idx, row in uncategorized_df.head(20).iterrows():
                 match_result = agent_choose_category(
-                    row['Description'],
+                    row['description'],
                     st.session_state.mappings,
                     vendor_map,
                     categories,
@@ -1490,9 +1490,9 @@ def display_suggestions():
 
                 suggestions.append({
                     'index': idx,
-                    'description': row['Description'],
-                    'amount': row['Amount'],
-                    'date': row['Date'],
+                    'description': row['description'],
+                    'amount': row['amount'],
+                    'date': row['date'],
                     'suggested_category': match_result.category,
                     'confidence': match_result.confidence,
                     'strategy': match_result.strategy,
@@ -1526,8 +1526,8 @@ def display_suggestions():
 
                         if st.button("✅ Apply", key=f"apply_{suggestion['index']}"):
                             # Update in memory
-                            df.at[suggestion['index'], 'Category'] = selected_category
-                            st.session_state.transactions_df.at[suggestion['index'], 'Category'] = selected_category
+                            df.at[suggestion['index'], 'category'] = selected_category
+                            st.session_state.transactions_df.at[suggestion['index'], 'category'] = selected_category
 
                             # Save to database
                             date_str = suggestion['date'].strftime('%Y-%m-%d') if hasattr(suggestion['date'], 'strftime') else str(suggestion['date'])
@@ -1626,7 +1626,7 @@ def display_trends():
             growing = cat_trends_df[cat_trends_df['Change_Percent'] > 0].head(5)
             if not growing.empty:
                 for _, row in growing.iterrows():
-                    st.write(f"• {row['Category']}: +{row['Change_Percent']:.1f}% (₪{row['Latest_Month']:,.2f})")
+                    st.write(f"• {row['category']}: +{row['Change_Percent']:.1f}% (₪{row['Latest_Month']:,.2f})")
             else:
                 st.write("No growing categories")
 
@@ -1635,7 +1635,7 @@ def display_trends():
             declining = cat_trends_df[cat_trends_df['Change_Percent'] < 0].head(5)
             if not declining.empty:
                 for _, row in declining.iterrows():
-                    st.write(f"• {row['Category']}: {row['Change_Percent']:.1f}% (₪{row['Latest_Month']:,.2f})")
+                    st.write(f"• {row['category']}: {row['Change_Percent']:.1f}% (₪{row['Latest_Month']:,.2f})")
             else:
                 st.write("No declining categories")
     else:
@@ -1649,14 +1649,14 @@ def display_trends():
 
     if not trends_df.empty:
         # Select top categories to display
-        top_categories = category_summary(df).head(5)['Category'].tolist()
+        top_categories = category_summary(df).head(5)['category'].tolist()
 
         if top_categories:
             # Create line chart for top categories
             trends_melted = trends_df.reset_index().melt(
                 id_vars='Month',
                 value_vars=[cat for cat in top_categories if cat in trends_df.columns],
-                var_name='Category',
+                var_name='category',
                 value_name='Spending'
             )
 
@@ -1664,7 +1664,7 @@ def display_trends():
                 trends_melted,
                 x='Month',
                 y='Spending',
-                color='Category',
+                color='category',
                 title="Top 5 Categories Spending Trend",
                 labels={'Spending': 'Amount (₪)', 'Month': 'Month'}
             )
@@ -1693,10 +1693,10 @@ def display_transactions():
     with col1:
         st.metric("Total Transactions", len(df))
     with col2:
-        categorized = df['Category'].notna().sum()
+        categorized = df['category'].notna().sum()
         st.metric("Categorized", f"{categorized} ({(categorized/len(df)*100):.1f}%)")
     with col3:
-        uncategorized = df['Category'].isna().sum()
+        uncategorized = df['category'].isna().sum()
         st.metric("Uncategorized", uncategorized)
 
     st.divider()
@@ -1728,19 +1728,19 @@ def display_transactions():
     # Display transactions with editable categories
     for idx, row in page_df.iterrows():
         # Get category icon for the expander title
-        category = row['Category'] if pd.notna(row['Category']) else None
+        category = row['category'] if pd.notna(row['category']) else None
         category_icon = get_category_icon(category) if category else "❓"
 
         with st.expander(
-            f"{category_icon} 📅 {row['Date'].strftime('%Y-%m-%d') if hasattr(row['Date'], 'strftime') else str(row['Date'])} | "
-            f"₪{abs(row['Amount']):,.2f} | {row['Description'][:50]}"
+            f"{category_icon} 📅 {row['date'].strftime('%Y-%m-%d') if hasattr(row['date'], 'strftime') else str(row['date'])} | "
+            f"₪{abs(row['amount']):,.2f} | {row['description'][:50]}"
         ):
             col1, col2 = st.columns([2, 1])
 
             with col1:
-                st.write(f"**Description:** {row['Description']}")
-                st.write(f"**Amount:** ₪{row['Amount']:,.2f}")
-                st.write(f"**Date:** {row['Date']}")
+                st.write(f"**Description:** {row['description']}")
+                st.write(f"**Amount:** ₪{row['amount']:,.2f}")
+                st.write(f"**Date:** {row['date']}")
 
                 # Show current category with badge
                 if category:
@@ -1748,7 +1748,7 @@ def display_transactions():
 
             with col2:
                 # Category selector
-                current_category = row['Category'] if pd.notna(row['Category']) else None
+                current_category = row['category'] if pd.notna(row['category']) else None
 
                 # Create options list with icons
                 if current_category:
@@ -1774,9 +1774,9 @@ def display_transactions():
                 if selected_category != "(Select Category)" and selected_category != current_category:
                     if st.button("💾 Save", key=f"save_{idx}", type="primary"):
                         # Update in database
-                        date_str = row['Date'].strftime('%Y-%m-%d') if hasattr(row['Date'], 'strftime') else str(row['Date'])
+                        date_str = row['date'].strftime('%Y-%m-%d') if hasattr(row['date'], 'strftime') else str(row['date'])
                         success = st.session_state.service.apply_category(
-                            row['Description'],
+                            row['description'],
                             date_str,
                             selected_category,
                             learn=True
@@ -1784,13 +1784,13 @@ def display_transactions():
 
                         if success:
                             # Update in session state
-                            st.session_state.transactions_df.at[idx, 'Category'] = selected_category
+                            st.session_state.transactions_df.at[idx, 'category'] = selected_category
                             if 'filtered_df' in st.session_state:
                                 del st.session_state.filtered_df
 
                             # Learn from feedback
                             st.session_state.mappings, st.session_state.vendor_map = learn_from_user_feedback(
-                                row['Description'],
+                                row['description'],
                                 selected_category,
                                 st.session_state.mappings,
                                 st.session_state.vendor_map
@@ -1833,7 +1833,7 @@ def display_vendor_management():
     with col1:
         st.metric("Total Vendors", len(top5_df))
     with col2:
-        unique_categories = top5_df['Category'].nunique()
+        unique_categories = top5_df['category'].nunique()
         st.metric("Categories", unique_categories)
     with col3:
         total_transactions = top5_df['Transaction_Count'].sum()
@@ -1843,8 +1843,8 @@ def display_vendor_management():
 
     # Display editable vendor list
     for idx, row in top5_df.iterrows():
-        vendor = row['Description']
-        current_category = row['Category']
+        vendor = row['description']
+        current_category = row['category']
         total_amount = row['Total_Amount']
         transaction_count = row['Transaction_Count']
 
@@ -1932,13 +1932,13 @@ def display_analytics():
     if not category_df.empty:
         # Display as expandable cards
         for idx, row in category_df.iterrows():
-            icon = get_category_icon(row['Category'])
-            color = get_category_color(row['Category'])
+            icon = get_category_icon(row['category'])
+            color = get_category_color(row['category'])
             amount = abs(row['Total_Expenses'])
             count = row['Transaction_Count']
 
             with st.expander(
-                f"{icon} {row['Category']} - ₪{amount:,.2f} ({count} transactions)",
+                f"{icon} {row['category']} - ₪{amount:,.2f} ({count} transactions)",
                 expanded=idx < 5  # Expand top 5 by default
             ):
                 col1, col2, col3 = st.columns(3)
@@ -1960,10 +1960,10 @@ def display_analytics():
     if not top5_df.empty:
         # Add icon column
         top5_df_display = top5_df.copy()
-        top5_df_display['Icon'] = top5_df_display['Category'].apply(get_category_icon)
+        top5_df_display['Icon'] = top5_df_display['category'].apply(get_category_icon)
 
         # Reorder columns
-        cols = ['Icon', 'Category', 'Description', 'Total_Amount', 'Transaction_Count']
+        cols = ['Icon', 'category', 'description', 'Total_Amount', 'Transaction_Count']
         top5_df_display = top5_df_display[cols]
 
         # Format amounts
@@ -2407,20 +2407,20 @@ def display_unified_home():
 
                 with col1:
                     st.metric("Total Transactions", len(df))
-                    categorized = df['Category'].notna().sum()
+                    categorized = df['category'].notna().sum()
                     st.metric("Categorized", f"{categorized} ({(categorized/len(df)*100):.1f}%)")
 
                 with col2:
-                    total_expenses = df[df['Amount'] < 0]['Amount'].sum()
+                    total_expenses = df[df['amount'] < 0]['amount'].sum()
                     st.metric("Total Expenses", f"₪{abs(total_expenses):,.2f}")
-                    total_income = df[df['Amount'] > 0]['Amount'].sum()
+                    total_income = df[df['amount'] > 0]['amount'].sum()
                     st.metric("Total Income", f"₪{total_income:,.2f}")
 
                 with col3:
-                    net_amount = df['Amount'].sum()
+                    net_amount = df['amount'].sum()
                     st.metric("Net Amount", f"₪{net_amount:,.2f}")
-                    if 'Date' in df.columns:
-                        date_range = f"{df['Date'].min().strftime('%Y-%m-%d')} to {df['Date'].max().strftime('%Y-%m-%d')}"
+                    if 'date' in df.columns:
+                        date_range = f"{df['date'].min().strftime('%Y-%m-%d')} to {df['date'].max().strftime('%Y-%m-%d')}"
                         st.caption(f"📅 {date_range}")
 
                 if st.button("Close", key="close_quick_stats"):
@@ -2465,7 +2465,7 @@ def display_unified_transactions():
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Only show suggestions if we have uncategorized transactions
-    uncategorized_count = len(df[df['Category'].isna() | (df['Category'] == '')])
+    uncategorized_count = len(df[df['category'].isna() | (df['category'] == '')])
     if uncategorized_count > 0:
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.subheader("🤖 Auto-Categorize Suggestions")
